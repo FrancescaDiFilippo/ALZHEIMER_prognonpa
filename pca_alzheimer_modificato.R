@@ -6,6 +6,11 @@ dataset_completo<- read.csv("oasis_longitudinal.csv")
 
 visit1 <- filter(dataset_completo, Visit==1)
 library(rgl)
+library(mgcv)
+library(rgl)
+library(splines)
+library(pbapply)
+
 
 
 DATA.label <- visit1[,3]
@@ -59,6 +64,48 @@ for(j in 1:nrow(data)){
   
 }
 
+casestudy=visit1[which(visit1$Group!="Converted"),]
+i1=which(casestudy$Group=="Demented")
+
+New=vector(mode="logical",length=136)
+New[i1]=1
+New[-i1]=0
+
+
+i2=which(alz2$Group=="Converted")
+newdataset=pc[-i2,]
+newdataset <- data.frame(newdataset)
+
+model_gam=gam(New ~ s(X1,bs='cr') + s(X2,bs='cr')+ s(X3,bs='cr'), data = newdataset,family= binomial)
+summary(model_gam)
+
+hist(model_gam$residuals)
+qqnorm(model_gam$residuals)
+
+pred_gam=predict(model_gam,newdata=grid)
+shapiro.test(model_gam$residuals)
+
+
+model_gam_ns <-
+  lm(New ~ ns(X1, df = 3) + ns(X2, df = 3) + ns(X3,df=3), data = newdataset)
+
+plot(model_gam_ns$residuals,model_gam$residuals)
+cor(model_gam_ns$residuals,model_gam$residuals)
+
+model_gam_inter = gam(New~ s(X1, bs = 'cr') + 
+                        s(X2, bs ='cr') + s(X3,bs='cr') +
+                        s(I(X1 * X2), bs='cr')+s(I(X1 * X3), bs = 'cr')+s(I(X3 * X2), bs = 'cr'),
+                      data = newdataset)
+summary(model_gam_inter)
+
+model_gam_inter_2 = gam(New~ s(X1, bs = 'cr') + 
+                        s(X2, bs ='cr') + s(X3,bs='cr') +
+                        s(I(X1 * X2), bs='cr')+s(I(X1 * X3), bs = 'cr'),
+                      data = newdataset)
+summary(model_gam_inter_2)
+
+hist(model_gam_inter_2$residuals)
+qqnorm(model_gam_inter_2$residuals)
 
 # EXPLAINED VARIANCE: -----------------------------------------------------
 
