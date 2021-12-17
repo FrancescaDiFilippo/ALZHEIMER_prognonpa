@@ -17,7 +17,7 @@ library(broom)
 
 
 # controllo ingressi in area c
-setwd('C:/Users/Elena/Desktop/Elena/Polimi/MAGISTRALE/Nonparametric statistics/Progetto/github repository/PROGETTONONPARAM/Elena')
+setwd('C:/Users/Elena/Desktop/Elena/Polimi/MAGISTRALE/Nonparametric statistics/Progetto/github repository/ALZHEIMER_prognonpa/Elena')
 dataset_xsectional <- read.csv("oasis_cross-sectional.csv", header = T)
 dataset_longitudinal <- read.csv("oasis_longitudinal.csv", header = T)
 
