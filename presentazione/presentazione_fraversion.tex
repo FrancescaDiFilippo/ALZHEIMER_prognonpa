@@ -82,15 +82,13 @@
 		
 	\end{frame}
 	
-	\begin{frame}{Problem of Correlation}
-		We tried to solve the problem of correlation using the PCA method.
-		
-	\end{frame}
+	
 	
 	\begin{frame}{Analysis Male VS Female}
 		%VARIABLE TAKEN INTO CONSIDERATION
 		\vspace{0.1cm}
-		Variable considered: $[Age,EDUC,MMSE,eTIV,nWBV,ASF]$ 
+	
+	\begin{small}	Variable considered: $[Age,EDUC,MMSE,eTIV,nWBV,ASF]$ \end{small}
 		\vspace{-0.2cm}
 		
 	$$
@@ -98,12 +96,23 @@
 	$$
 	 
 	% hist: histmvsf
-	\begin{center}
-		\includegraphics[width=0.45\columnwidth]{histmvsf.jpeg}
-	\end{center}
-	% pvalue: non mi viene la linea verde
-	\vspace{-0.7cm}
+	
+	\begin{multicols}{2}
+		
+	\vspace{0.5cm}
+	$T_0 = |\bar{Y}_{female} - \bar{Y}_{male}|$	
+	
+	\vspace{1cm}
 	$pvalue= 0 $
+	\columnbreak
+
+	\begin{center}
+		\includegraphics[width=0.95\columnwidth]{histmvsf.jpeg}
+	\end{center}
+	\end{multicols}
+	% pvalue: non mi viene la linea verde
+
+	
 	\end{frame}
 
 
@@ -155,8 +164,8 @@
 	\begin{frame}{ TWO WAYS ANOVA: EDUCATION (I)}
 	\vspace{-0.3cm}
  	$$ EDUC =   \mu + \alpha_i + \beta_j + \gamma_{ij} + \epsilon  $$
- 	$ i ={male,female}$
- 	$\: j={ Demented, Non Demented }$
+ 	$ i =\{male,female\} \;$,
+ 	$\: j=\{ Demented, Non Demented \}$
  	
  	
  	$\: \alpha= sex \space$, 
@@ -166,21 +175,23 @@
 	H_0: \gamma_{ij}=0\; \;vs\;H_1:\gamma_{ij}\neq0 
 	$$
 	TEST STATISTIC: $ T0= F-STATISTICS \; $
+	
 	$\; p-value = 0.082 $
 	at level of confidence $ 95\% $ there's no evidence to	reject $H_0$ 
 	so we reduce the model
 	\vspace{-0.2cm}
-	$$ EDUC =  \mu + \alpha_i + \beta_j  + \epsilon $$
-		$$
-	H_0: \beta_j=0\; \;vs\;H_1:\beta_i\neq0 
-	$$
-	$p-value = 0.069$
-	at level of confidence $ 95\% $ there's no evidence to	reject $H_0$ there's no  evidence to reject $H_0$ 
+	
 	
 \end{frame}
 	
 \begin{frame}{TWO WAYS ANOVA: EDUCATION (II)}
 
+	$$ EDUC =  \mu + \alpha_i + \beta_j  + \epsilon $$
+	$$
+	H_0: \beta_j=0\; \;vs\;H_1:\beta_i\neq0 
+	$$
+	$p-value = 0.069$
+	at level of confidence $ 95\% $ there's no evidence to	reject $H_0$ there's no  evidence to reject $H_0$ 
 	
 	$$ EDUC =  \mu + \alpha_i  $$
 	
@@ -194,8 +205,8 @@ while with parametric test at least the diagnostic division is significant
 \end{frame}
 	\begin{frame}{ TWO WAYS ANOVA: MMSE (I)}
 	$$ MMSE =   \mu + \alpha_i + \beta_j + \gamma_{ij} + \epsilon $$
-		$ i ={male,female}$
-	$ j={ Demented, Non Demented }$
+		$ i =\{male,female\} \;$,
+	$ j=\{ Demented, Non Demented \}$
 	$$
 	H_0: \gamma_{ij}=0\; \;vs\;H_1:\gamma_{ij}\neq0 
 	$$
@@ -204,17 +215,18 @@ while with parametric test at least the diagnostic division is significant
 	$\; p-value = 0.875 $
 	there's no evidence to	reject $H_0$ 
 	so we reduce the model
-	$$ EDUC =   \mu + \alpha_i + \beta_j  + \epsilon  $$
-	$$
-	H_0:\beta_j=0\; \;vs\;H_1:\beta_j\neq0 
-	$$
-	$p-value = 0.446$
-	a there's no evidence to reject $H_0$ there's no  evidence to reject $H_0$ 
+	
 	
 \end{frame}
 
 \begin{frame}{TWO WAYS ANOVA: MMSE (II)}
 
+	$$ EDUC =   \mu + \alpha_i + \beta_j  + \epsilon  $$
+	$$
+	H_0:\beta_j=0\; \;vs\;H_1:\beta_j\neq0 
+	$$
+	$p-value = 0.446$
+	there's no evidence to reject $H_0$
 	
 	$$ EDUC =  \mu + \alpha_i $$
 	
@@ -226,30 +238,53 @@ while with parametric test at least the diagnostic division is significant
 	so the most significative model is $ MMSE \sim Diagnostic$
 	where Diagnostic is the division between Demented and Non Demented
 	\end{frame}
+
+
+
 	
-	\begin{frame}{regression}
+	\begin{frame}{Regression}
 		
 		% modello logistico e spiegare: demented and non demented e le covariate usate: ses, normal brain volume, age, mmse -> smoothing splines; cdr senza smoothing perchè pochi valori distinti
 		% fittato su tutto il dataset esclusi i converted
 		
 		% summary, shapiro e qqplot
 		
+		Used a logistic model of classification Demented-Nondemented, with smoothing splines (degree 3) for EDUC, nWBV, Age, MMSE
+		
+		$$ \log \frac{p}{1-p} = EDUC + nWBV + Age + MMSE + CDR$$
 		
 		
-	\end{frame}
+		\begin{multicols}{2}
 	
-	\begin{frame}{regression}
+	
+		\begin{center}
+			\includegraphics[width=\columnwidth]{regr1.jpeg}
+		\end{center}
+		\columnbreak
+		\begin{center}
+			\includegraphics[width=\columnwidth]{regr2.jpeg}
+		\end{center}
 		
-		% prediction sui converted
+		\end{multicols}
 		
-		% prediction su alcune persone non demented (tolte dal train del modello)
 		
 	\end{frame}
 	
 	\begin{frame}{Prediction}
+	
+	Prediction for Demented patients:
+	\begin{center}
+		\includegraphics[width=\columnwidth]{prediction.jpeg}
+	\end{center}
+
+	Prediction for Nondemented patients:
+	\begin{center}
+		\includegraphics[width=0.8\columnwidth]{prediction2.jpeg}
+	\end{center}	
+
 		
 	\end{frame}
-	
+
 	\begin{frame}{Survival Analysis (I)}
 		
 		\vspace{0.3 cm}
@@ -290,7 +325,13 @@ while with parametric test at least the diagnostic division is significant
 	\end{frame}
 
 	
-	\begin{frame}{Future questions}
+	\begin{frame}{Future goals}
+	
+	\begin{itemize}
+		\item Complete our survival analysis
+		\item Solve the residual gaussianity problem
+		\item Perform a prediction on the other dataset of patient (not labelled)
+	\end{itemize}
 		
 	\end{frame}
 	
