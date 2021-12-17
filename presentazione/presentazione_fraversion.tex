@@ -164,8 +164,8 @@
 	\begin{frame}{ TWO WAYS ANOVA: EDUCATION (I)}
 	\vspace{-0.3cm}
  	$$ EDUC =   \mu + \alpha_i + \beta_j + \gamma_{ij} + \epsilon  $$
- 	$ i =\{male,female\} \;$,
- 	$\: j=\{ Demented, Non Demented \}$
+ 	$ j =\{male,female\} \;$,
+ 	$\: i=\{ Demented, Non Demented \}$
  	
  	
  	$\: \alpha= sex \space$, 
@@ -177,7 +177,7 @@
 	TEST STATISTIC: $ T0= F-STATISTICS \; $
 	
 	$\; p-value = 0.082 $
-	at level of confidence $ 95\% $ there's no evidence to	reject $H_0$ 
+	at level of confidence $ 95\% $ there's no evidence to	reject $H_0$, 
 	so we reduce the model
 	\vspace{-0.2cm}
 	
@@ -191,7 +191,7 @@
 	H_0: \beta_j=0\; \;vs\;H_1:\beta_i\neq0 
 	$$
 	$p-value = 0.069$
-	at level of confidence $ 95\% $ there's no evidence to	reject $H_0$ there's no  evidence to reject $H_0$ 
+	at level of confidence $ 95\% $ there's no evidence to	reject $H_0$ 
 	
 	$$ EDUC =  \mu + \alpha_i  $$
 	
@@ -205,15 +205,17 @@ while with parametric test at least the diagnostic division is significant
 \end{frame}
 	\begin{frame}{ TWO WAYS ANOVA: MMSE (I)}
 	$$ MMSE =   \mu + \alpha_i + \beta_j + \gamma_{ij} + \epsilon $$
-		$ i =\{male,female\} \;$,
-	$ j=\{ Demented, Non Demented \}$
+		$ j =\{male,female\} \;$,
+	$ i=\{ Demented, Non Demented \}$
 	$$
 	H_0: \gamma_{ij}=0\; \;vs\;H_1:\gamma_{ij}\neq0 
 	$$
 	
 	TEST STATISTIC: $ T0= F-STATISTICS \;$
+	
 	$\; p-value = 0.875 $
-	there's no evidence to	reject $H_0$ 
+	
+	there's no evidence to	reject $H_0$,  
 	so we reduce the model
 	
 	
@@ -225,6 +227,7 @@ while with parametric test at least the diagnostic division is significant
 	$$
 	H_0:\beta_j=0\; \;vs\;H_1:\beta_j\neq0 
 	$$
+	
 	$p-value = 0.446$
 	there's no evidence to reject $H_0$
 	
@@ -243,6 +246,8 @@ while with parametric test at least the diagnostic division is significant
 
 	
 	\begin{frame}{Regression}
+	
+	\vspace{0.3cm}
 		
 		% modello logistico e spiegare: demented and non demented e le covariate usate: ses, normal brain volume, age, mmse -> smoothing splines; cdr senza smoothing perchè pochi valori distinti
 		% fittato su tutto il dataset esclusi i converted
@@ -253,26 +258,28 @@ while with parametric test at least the diagnostic division is significant
 		
 		$$ \log \frac{p}{1-p} = EDUC + nWBV + Age + MMSE + CDR$$
 		
+		\vspace{0.2cm}
+		with $p =$ probability that the observation is 'Demented'
 		
-		\begin{multicols}{2}
+	%	\begin{multicols}{2}
 	
 	
 		\begin{center}
-			\includegraphics[width=\columnwidth]{regr1.jpeg}
+			\includegraphics[width=0.6\columnwidth]{regr1.jpeg}
 		\end{center}
-		\columnbreak
-		\begin{center}
-			\includegraphics[width=\columnwidth]{regr2.jpeg}
-		\end{center}
-		
-		\end{multicols}
+	%	\columnbreak
+	%	\begin{center}
+	%		\includegraphics[width=\columnwidth]{regr2.jpeg}
+	%	\end{center}
+	%	
+	%	\end{multicols}
 		
 		
 	\end{frame}
 	
 	\begin{frame}{Prediction}
 	
-	Prediction for Demented patients:
+	Prediction for Converted patients:
 	\begin{center}
 		\includegraphics[width=\columnwidth]{prediction.jpeg}
 	\end{center}
