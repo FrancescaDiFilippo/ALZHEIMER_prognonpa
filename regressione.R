@@ -30,6 +30,11 @@ demented <- factor(demented)
 model_gam=gam(demented ~ s(EDUC,bs='cr') + s(nWBV,bs='cr') + s(Age, bs='cr')  + s(MMSE, bs='cr') + s(eTIV) , data = train, select = TRUE, family = binomial)
 summary(model_gam)
 
+model_gam2 <- gam(demented ~ s(EDUC,bs='cr') + s(nWBV,bs='cr') + s(Age, bs='cr')  + s(MMSE, bs='cr') , data = train, select = TRUE, family = binomial)
+summary(model_gam2)
+
+anova(model_gam2, model_gam)
+
 pred <- predict(model_gam, newdata = conver.data, type = 'response')
 pred <- as.data.frame(pred)
 pred$type <- rep('Nondemented', dim(pred)[1])
@@ -98,7 +103,7 @@ library(leaps)
 library(MASS)
 library(RcmdrMisc)
 
-model_glm=glm(demented ~ I(M.F=='F') + EDUC + EDUC:I(M.F=='F') + nWBV + nWBV:I(M.F=='F') + Age + Age:I(M.F=='F')  + MMSE + MMSE:I(M.F=='F') +eTIV + eTIV:I(M.F=='F') , data = train, family = binomial)
+model_glm=glm(demented ~ M.F + EDUC + EDUC:M.F + nWBV + nWBV:M.F + Age + Age:M.F  + MMSE + MMSE:M.F +eTIV + eTIV:M.F , data = train, family = binomial)
 summary(model_glm)
 
 1-model_glm$deviance/model_glm$null.deviance
