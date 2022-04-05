@@ -1,0 +1,312 @@
+---
+title: 'outlier detection'
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+  html_notebook: default
+---
+
+
+```{r setup, include=FALSE}
+library(rgl)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::knit_hooks$set(webgl = hook_webgl)
+```
+
+```{css, echo=FALSE}
+.extracode {
+background-color: lightblue;
+}
+```
+```{r}
+setwd('C:/Users/Elena/Desktop/Elena/Polimi/MAGISTRALE/Nonparametric statistics/Progetto/github repository/ALZHEIMER_prognonpa/Elena')
+dataset_xsectional <- read.csv("oasis_cross-sectional.csv", header = T)
+dataset_longitudinal <- read.csv("oasis_longitudinal.csv", header = T)
+```
+```{r}
+library(DepthProc)
+library(aplpack)
+```
+
+
+
+To visualize the outliers in this context we retort to a bagplot matrix:
+
+```{r}
+bagplot_matrix <- aplpack::bagplot.pairs(dataset_longitudinal)  # bagplot dimension by dimension
+```
+utilizzando questo bagplot cerco di capire quali confronti abbia senso fare per trovare gli outlier con le depth measures
+
+
+```{r}
+# demented <- dataset_longitudinal[which(dataset_longitudinal$Group == 'Demented'),]
+# nondemented <- dataset_longitudinal[which(dataset_longitudinal$Group == 'Nondemented'),]
+# 
+# ddPlot(x = demented ,y=nondemented,depth_params = list(method='Tukey'))
+```
+
+```{r}
+depthContour(
+  data.frame(dataset_longitudinal$Age, dataset_longitudinal$MMSE),
+  depth_params = list(method = 'Tukey'),
+  points = TRUE,
+  colors = colorRampPalette(c('white', 'navy')),
+  levels = 10,
+  pdmedian = F,
+  graph_params = list(cex=.01, pch=1),
+  pmean = F
+)
+
+bags1 <- bagplot(data.frame(dataset_longitudinal$Age, dataset_longitudinal$MMSE))
+
+```
+```{r}
+outlying_obs1 <- bags1$pxy.outlier
+
+outlying_obs1
+
+which(dataset_longitudinal$Age==outlying_obs1[,1] & dataset_longitudinal$MMSE==outlying_obs1[,2])
+```
+
+
+```{r}
+depthContour(
+  data.frame(dataset_longitudinal$EDUC, dataset_longitudinal$MMSE),
+  depth_params = list(method = 'Tukey'),
+  points = TRUE,
+  colors = colorRampPalette(c('white', 'navy')),
+  levels = 10,
+  pdmedian = F,
+  graph_params = list(cex=.01, pch=1),
+  pmean = F
+)
+
+bags2 <- bagplot(  data.frame(dataset_longitudinal$EDUC, dataset_longitudinal$MMSE))
+```
+
+```{r}
+outlying_obs2 <- bags2$pxy.outlier
+
+outlying_obs2
+
+which(dataset_longitudinal$EDUC==outlying_obs2[,1] & dataset_longitudinal$MMSE==outlying_obs2[,2])
+```
+
+
+```{r}
+depthContour(
+  data.frame(dataset_longitudinal$eTIV, dataset_longitudinal$MMSE),
+  depth_params = list(method = 'Tukey'),
+  points = TRUE,
+  colors = colorRampPalette(c('white', 'navy')),
+  levels = 10,
+  pdmedian = F,
+  graph_params = list(cex=.01, pch=1),
+  pmean = F
+)
+
+bags3 <- bagplot(data.frame(dataset_longitudinal$eTIV, dataset_longitudinal$MMSE))
+```
+
+```{r}
+outlying_obs3 <- bags3$pxy.outlier
+
+outlying_obs3
+
+which(dataset_longitudinal$eTIV==outlying_obs3[,1] & dataset_longitudinal$MMSE==outlying_obs3[,2])
+```
+
+```{r}
+depthContour(
+  data.frame(dataset_longitudinal$nWBV, dataset_longitudinal$MMSE),
+  depth_params = list(method = 'Tukey'),
+  points = TRUE,
+  colors = colorRampPalette(c('white', 'navy')),
+  levels = 10,
+  pdmedian = F,
+  graph_params = list(cex=.01, pch=1),
+  pmean = F
+)
+
+bags4 <- bagplot(data.frame(dataset_longitudinal$nWBV, dataset_longitudinal$MMSE))
+```
+
+```{r}
+outlying_obs4 <- bags4$pxy.outlier
+
+outlying_obs4
+
+which(dataset_longitudinal$nWBV==outlying_obs4[,1] & dataset_longitudinal$MMSE==outlying_obs4[,2])
+```
+
+
+```{r}
+depthContour(
+  data.frame(dataset_longitudinal$ASF, dataset_longitudinal$MMSE),
+  depth_params = list(method = 'Tukey'),
+  points = TRUE,
+  colors = colorRampPalette(c('white', 'navy')),
+  levels = 10,
+  pdmedian = F,
+  graph_params = list(cex=.01, pch=1),
+  pmean = F
+)
+
+bags5 <- bagplot(data.frame(dataset_longitudinal$ASF, dataset_longitudinal$MMSE))
+```
+
+```{r}
+outlying_obs5 <- bags5$pxy.outlier
+
+outlying_obs5
+
+
+which(dataset_longitudinal$ASF==outlying_obs5[,1] & dataset_longitudinal$MMSE==outlying_obs5[,2])
+```
+
+
+```{r}
+depthContour(
+  data.frame(dataset_longitudinal$Age,dataset_longitudinal$EDUC ),
+  depth_params = list(method = 'Tukey'),
+  points = TRUE,
+  colors = colorRampPalette(c('white', 'navy')),
+  levels = 10,
+  pdmedian = F,
+  graph_params = list(cex=.01, pch=1),
+  pmean = F
+)
+
+bags6 <- bagplot(data.frame(dataset_longitudinal$Age,dataset_longitudinal$EDUC ))
+```
+```{r}
+outlying_obs6 <- bags6$pxy.outlier
+
+outlying_obs6
+
+which(dataset_longitudinal$Age==outlying_obs6[,1] & dataset_longitudinal$EDUC==outlying_obs6[,2])
+```
+queste tre persone hanno una educazione molto bassa rispetto agli altri
+
+
+
+```{r}
+depthContour(
+  data.frame(dataset_longitudinal$eTIV, dataset_longitudinal$EDUC),
+  depth_params = list(method = 'Tukey'),
+  points = TRUE,
+  colors = colorRampPalette(c('white', 'navy')),
+  levels = 10,
+  pdmedian = F,
+  graph_params = list(cex=.01, pch=1),
+  pmean = F
+)
+
+bags7 <- bagplot(data.frame(dataset_longitudinal$eTIV, dataset_longitudinal$EDUC))
+```
+```{r}
+outlying_obs7 <- bags7$pxy.outlier
+
+outlying_obs7
+
+which(dataset_longitudinal$eTIV==outlying_obs7[,1] & dataset_longitudinal$EDUC==outlying_obs7[,2])
+```
+
+
+```{r}
+depthContour(
+  data.frame(dataset_longitudinal$nWBV, dataset_longitudinal$EDUC),
+  depth_params = list(method = 'Tukey'),
+  points = TRUE,
+  colors = colorRampPalette(c('white', 'navy')),
+  levels = 10,
+  pdmedian = F,
+  graph_params = list(cex=.01, pch=1),
+  pmean = F
+)
+
+bags8 <- bagplot(data.frame(dataset_longitudinal$nWBV, dataset_longitudinal$EDUC))
+```
+```{r}
+outlying_obs8 <- bags8$pxy.outlier
+
+outlying_obs8
+
+which(dataset_longitudinal$nWBV==outlying_obs8[,1] & dataset_longitudinal$EDUC==outlying_obs8[,2])
+```
+
+
+```{r}
+depthContour(
+  data.frame(dataset_longitudinal$ASF, dataset_longitudinal$EDUC),
+  depth_params = list(method = 'Tukey'),
+  points = TRUE,
+  colors = colorRampPalette(c('white', 'navy')),
+  levels = 10,
+  pdmedian = F,
+  graph_params = list(cex=.01, pch=1),
+  pmean = F
+)
+
+bags9 <- bagplot(data.frame(dataset_longitudinal$ASF, dataset_longitudinal$EDUC))
+```
+
+
+```{r}
+outlying_obs9 <- bags9$pxy.outlier
+
+outlying_obs9
+
+which(dataset_longitudinal$ASF==outlying_obs9[,1] & dataset_longitudinal$EDUC==outlying_obs9[,2])
+```
+
+```{r}
+depthContour(
+  data.frame(dataset_longitudinal$Age, dataset_longitudinal$eTIV),
+  depth_params = list(method = 'Tukey'),
+  points = TRUE,
+  colors = colorRampPalette(c('white', 'navy')),
+  levels = 10,
+  pdmedian = F,
+  graph_params = list(cex=.01, pch=1),
+  pmean = F
+)
+
+bags10 <- bagplot(data.frame(dataset_longitudinal$Age, dataset_longitudinal$eTIV))
+```
+
+
+```{r}
+outlying_obs10 <- bags10$pxy.outlier
+
+outlying_obs10
+
+which(dataset_longitudinal$Age==outlying_obs10[,1] & dataset_longitudinal$eTIV==outlying_obs10[,2])
+```
+
+
+
+il paziente alla riga 102 risulta anomalo sia rispetto a MMSE vs Age, che MMSE vs le ultrime 3 colonne (che sono dipendenti)
+
+il paziente alla riga 101 solo per MMSE vs Age
+
+i pazienti alle righe 79, 80, 81 anomali per EDUC vs Age e vs le ultime 3 colonne
+
+il paziente alla riga 140 risulta anomalo solo per Age vs eTIV (!attenzione: non per le altre due colonne con cui etiv è dipendente! -> può essere il valore di etiv sbagliato nella riga 140?)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
