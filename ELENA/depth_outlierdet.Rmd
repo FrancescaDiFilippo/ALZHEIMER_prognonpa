@@ -298,15 +298,84 @@ il paziente alla riga 140 risulta anomalo solo per Age vs eTIV (!attenzione: non
 
 
 
+now we'll do the same with the complete dataset
+
+```{r}
+dataset_train <- read.csv("train.csv", header = T)
+dataset_train <- dataset_train[,-1]
+dataset_train$L <- ifelse(dataset_train$label == 'Dem', 1, 0)
+head(dataset_train)
+```
 
 
 
 
 
+To visualize the outliers in this context we retort to a bagplot matrix:
+
+```{r}
+bagplot_matrix_train <- aplpack::bagplot.pairs(dataset_train)
+```
+
+it seems to have problems only Age with eTIV and nWBV
 
 
+Age vs eTIV:
+
+```{r}
+depthContour(
+  data.frame(dataset_train$Age, dataset_train$eTIV),
+  depth_params = list(method = 'Tukey'),
+  points = TRUE,
+  colors = colorRampPalette(c('white', 'navy')),
+  levels = 10,
+  pdmedian = F,
+  graph_params = list(cex=.01, pch=1),
+  pmean = F
+)
+
+bags1_train <- bagplot(data.frame(dataset_train$Age, dataset_train$eTIV))
+
+```
+```{r}
+outlying_obs1_train <- bags1_train$pxy.outlier
+
+outlying_obs1_train
+
+which(dataset_train$Age==outlying_obs1_train[1,1] & dataset_train$eTIV==outlying_obs1_train[1,2])
+which(dataset_train$Age==outlying_obs1_train[2,1] & dataset_train$eTIV==outlying_obs1_train[2,2])
+```
 
 
+Age vs nWBV:
+
+```{r}
+depthContour(
+  data.frame(dataset_train$Age, dataset_train$nWBV),
+  depth_params = list(method = 'Tukey'),
+  points = TRUE,
+  colors = colorRampPalette(c('white', 'navy')),
+  levels = 10,
+  pdmedian = F,
+  graph_params = list(cex=.01, pch=1),
+  pmean = F
+)
+
+bags2_train <- bagplot(data.frame(dataset_train$Age, dataset_train$nWBV))
+
+```
+```{r}
+outlying_obs2_train <- bags2_train$pxy.outlier
+
+outlying_obs2_train
+
+which(dataset_train$Age==outlying_obs2_train[,1] & dataset_train$nWBV==outlying_obs2_train[,2])
+```
+
+
+In the dataset 'train.csv':
+-at line 175 there is a patient anomalous both for Age vs eTIV and Age vs nWBV;
+-at line 145 there is a patient anomalous only for Age vs eTIV.
 
 
 
