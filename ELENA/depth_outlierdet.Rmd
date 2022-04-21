@@ -287,13 +287,13 @@ which(dataset_longitudinal$Age==outlying_obs10[,1] & dataset_longitudinal$eTIV==
 
 
 
-il paziente alla riga 102 risulta anomalo sia rispetto a MMSE vs Age, che MMSE vs le ultrime 3 colonne (che sono dipendenti)
+il paziente OAS2_0048 alla riga 101 risulta anomalo alla quarta visita per MMSE vs Age
 
-il paziente alla riga 101 solo per MMSE vs Age
+il paziente OAS2_0048 alla riga 102 risulta anomalo alla quinta visita sia rispetto a MMSE vs Age, che MMSE vs le ultrime 3 colonne (che sono dipendenti)
 
-i pazienti alle righe 79, 80, 81 anomali per EDUC vs Age e vs le ultime 3 colonne
+il paziente	OAS2_0040 alle righe 79, 80, 81 anomalo in tutte e tre le visite per EDUC vs Age e vs le ultime 3 colonne
 
-il paziente alla riga 140 risulta anomalo solo per Age vs eTIV (!attenzione: non per le altre due colonne con cui etiv è dipendente! -> può essere il valore di etiv sbagliato nella riga 140?)
+il paziente OAS2_0066 alla riga 140 risulta anomalo alla prima visita solo per Age vs eTIV (!attenzione: non per le altre due colonne con cui etiv è dipendente! -> può essere il valore di etiv sbagliato nella riga 140? e soprattutto non LL visita successiva)
 
 
 
@@ -303,7 +303,7 @@ now we'll do the same with the complete dataset
 ```{r}
 dataset_train <- read.csv("train.csv", header = T)
 dataset_train <- dataset_train[,-1]
-dataset_train$L <- ifelse(dataset_train$label == 'Dem', 1, 0)
+dataset_train$L <- ifelse(dataset_train$label == 'Dem', 1, 0)  # dummy variable for demented/nondemented
 head(dataset_train)
 ```
 
