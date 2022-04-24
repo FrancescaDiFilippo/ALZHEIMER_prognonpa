@@ -10,8 +10,8 @@ library(car)
 library(ggplot2)
 library(yardstick)
 
-dataset<- read.csv("oasis_longitudinal.csv")
-dataset <- filter(dataset, Visit==1)
+# dataset<- read.csv("oasis_longitudinal.csv")
+# dataset <- filter(dataset, Visit==1)
 
 #EDUC: years of education 
 #SES: socio economic status
@@ -21,29 +21,39 @@ dataset <- filter(dataset, Visit==1)
 #nWBV: Normalize Whole Brain Volume
 #ASF: Atlas Scaling Factor (the volume-scaling factor required to match each individual to the atlas target)
 
-data <- dataset[,c(6,8,9,11,13,14)]
-i.converted <- which(dataset$Group=='Converted')
-data <- data[-i.converted,]
-data.aux <- dataset[-i.converted,]
-data$label <- rep('Nondem', dim(data)[1])
-i.dem <- which(data.aux$Group=='Demented')
-data$label[i.dem] <- 'Dem'
-data$label <- factor(data$label, labels = c('Nondem', 'Dem'))
-data$M <- ifelse(data$M.F=='M',1,0)
+# data <- dataset[,c(6,8,9,11,13,14)]
+# i.converted <- which(dataset$Group=='Converted')
+# data <- data[-i.converted,]
+# data.aux <- dataset[-i.converted,]
+# data$label <- rep('Nondem', dim(data)[1])
+# i.dem <- which(data.aux$Group=='Demented')
+# data$label[i.dem] <- 'Dem'
+# data$label <- factor(data$label, labels = c('Nondem', 'Dem'))
+# data$M <- ifelse(data$M.F=='M',1,0)
+# 
+# dataset2 <- read.table('C:/Users/E5440/Downloads/test set.csv', header = TRUE, sep=';')
+# dataset2$label <- ifelse(dataset2$CDR > 0, 'Dem', 'Nondem')
+# dataset2$label <- factor(dataset2$label, labels = c('Nondem', 'Dem'))
+# dataset2  <- dataset2[,c(2,4,5,7,9,10,12)]
+# dataset2$M <- ifelse(dataset2$M.F=='M',1,0)
+# colnames(dataset2) <- colnames(data)
+# data <- rbind(data, dataset2) 
+# 
+# train <- data[1:271,]
+# test <- data[272:dim(data)[1],]
 
-dataset2 <- read.table('C:/Users/E5440/Downloads/test set.csv', header = TRUE, sep=';')
-dataset2$label <- ifelse(dataset2$CDR > 0, 'Dem', 'Nondem')
-dataset2$label <- factor(dataset2$label, labels = c('Nondem', 'Dem'))
-dataset2  <- dataset2[,c(2,4,5,7,9,10,12)]
-dataset2$M <- ifelse(dataset2$M.F=='M',1,0)
-colnames(dataset2) <- colnames(data)
-data <- rbind(data, dataset2) 
-
+data <- read.csv('data.csv', header = TRUE, sep = ',')
+data$label <- ifelse(data$label=='Dem', 1, 0)
+data$label <- factor(data$label)
 train <- data[1:271,]
-test <- data[272:dim(data)[1],]
+test <- data[272:371,]
+data <- data[,-1]
+train <- train[,-1]
+test <- test[,-1]
 
-dem <- rep(0, dim(data)[1])
-dem[which(data$label=='Dem')] <- 1
+
+#OUTLIER
+train <- train[-c(145,175),]
 
 x11()
 with(data = data, scatterplotMatrix(data.frame(Age, EDUC, MMSE, eTIV, nWBV), groups = label))
@@ -55,9 +65,6 @@ with(data = data, scatterplotMatrix(data.frame(Age, EDUC, MMSE, eTIV, nWBV), gro
 
 model_gam=gam(label ~ M + s(EDUC,bs='cr') + s(nWBV,bs='cr') + s(Age, bs='cr')  + s(MMSE, bs='cr') + s(eTIV, bs='cr') , data = train, select = TRUE, family = binomial)
 summary(model_gam)
-
-#model_gam2 <- gam(label ~ M + s(EDUC,bs='cr') + s(I(EDUC*M),bs='cr') + s(nWBV,bs='cr') + s(I(nWBV*M),bs='cr') + s(Age, bs='cr') + s(I(Age*M), bs='cr') + s(MMSE, bs='cr') + s(I(MMSE*M), bs='cr') + s(eTIV, bs='cr') + s(I(M*eTIV), bs='cr'), data = train, select = TRUE, family = binomial)
-#summary(model_gam2) #non va bene
 
 model_gam2=gam(label ~ M + s(Age, bs='cr') + s(nWBV,bs='cr') + s(MMSE, bs='cr') + s(eTIV, bs='cr'), data = train, select = TRUE, family = binomial)
 summary(model_gam2)#senza educ
@@ -78,18 +85,18 @@ roc.curve <- function(predicted, test.set){
   spec <- NULL
   sens <- NULL
   for (i in 1:length(p0)) {
-    predicted$class.assigned <- rep('Nondem', dim(predicted)[1])
+    predicted$class.assigned <- rep(0, dim(predicted)[1])
     colnames(predicted) <- c('prob','class.assigned')
-    predicted[which(predicted$prob>=p0[i]),2] <- 'Dem'
+    predicted[which(predicted$prob>=p0[i]),2] <- 1
     true.lab <- test.set$label
     i.equal <- which(true.lab==predicted$class.assigned)
     n.equal <- length(i.equal)
     test.equal <- test.set[i.equal,]
-    n00 <- length(which(test.equal$label=='Nondem'))
+    n00 <- length(which(test.equal$label==0))
     n11 <- n.equal - n00
     
-    n01 <- length(which(predicted$class.assigned=='Nondem'&true.lab=='Dem')) #classified,true lab
-    n10 <- length(which(predicted$class.assigned=='Dem'&true.lab=='Nondem')) #classified,true lab
+    n01 <- length(which(predicted$class.assigned==0&true.lab==1)) #classified,true lab
+    n10 <- length(which(predicted$class.assigned==1&true.lab==0)) #classified,true lab
     
     sensitivity <- n11/(n01+n11)
     specificity <- n00/(n00+n10)
@@ -108,29 +115,28 @@ pred <- as.data.frame(pred)
 #NB è PIù IMPORTANTE MASSIMIZZARE SENSITIVITà
 #model_gam2
 data.roc <- roc.curve(pred, test)
-x11()
-plot.roc <- ggplot(data.roc,aes(x.roc,y.roc))+
-  theme(panel.background = element_rect(fill = 'gray90', colour = 'white'))+
-  xlim(c(0,1)) + ylim(c(0,1))+
-  geom_path(col='dodgerblue4', lwd=1.5)+ #geom_path
-  geom_ribbon(aes(ymin = 0, ymax=y.roc),fill = 'seagreen2')+
-  geom_line(data = data.frame(cbind(X1=seq(0,1,0.001), X2=seq(0,1,0.001))), aes(X1,X2), col='orangered', lty = 2, lwd=1.3)+
-  xlab('1 - specificity') + ylab('sensitivity')
 
+plot.roc <- function(data.roc){
+  ggplot(data.roc,aes(x.roc,y.roc))+
+    theme(panel.background = element_rect(fill = 'gray90', colour = 'white'))+
+    xlim(c(0,1)) + ylim(c(0,1))+
+    geom_path(col='dodgerblue4', lwd=1.5)+ #geom_path
+    geom_ribbon(aes(ymin = 0, ymax=y.roc),fill = 'seagreen2')+
+    geom_line(data = data.frame(cbind(X1=seq(0,1,0.001), X2=seq(0,1,0.001))), aes(X1,X2), col='orangered', lty = 2, lwd=1.3)+
+    xlab('1 - specificity') + ylab('sensitivity')
+}
+
+x11()
+plot.roc(data.roc = data.roc)
 roc_auc_vec(truth = test$label, estimate = pred$pred, event_level = 'second') #da aggiungere nel plot
 
 #model_gam4 (quello con solo age, MMSE, nWBV)
 pred <- predict(model_gam4, newdata = test, type = 'response')
 pred <- as.data.frame(pred)
 data.roc <- roc.curve(pred,test)
+
 x11()
-ggplot(data.roc,aes(x.roc,y.roc))+
-  theme(panel.background = element_rect(fill = 'gray90', colour = 'white'))+
-  xlim(c(0,1)) + ylim(c(0,1))+
-  geom_line(col='dodgerblue4', lwd=1.9)+
-  geom_ribbon(aes(ymin=0, ymax=y.roc), fill = 'seagreen2')+
-  geom_line(data = data.frame(cbind(X1=seq(0,1,0.001), X2=seq(0,1,0.001))), aes(X1,X2), col='orangered', lty = 2, lwd=1.3)+
-  xlab('1 - specificity')+ylab('sensitivity')
+plot.roc(data.roc = data.roc)
 roc_auc_vec(truth = test$label, estimate = pred$pred, event_level = 'second')#da aggiungere nel plot
 
 #provo solo con MMSE
@@ -139,14 +145,9 @@ summary(model_gam_MMSE)#senza educ e etiv
 pred <- predict(model_gam_MMSE, newdata = test, type = 'response')
 pred <- as.data.frame(pred)
 data.roc <- roc.curve(pred,test)
+
 x11()
-ggplot(data.roc,aes(x.roc,y.roc))+
-  theme(panel.background = element_rect(fill = 'gray90', colour = 'white'))+
-  xlim(c(0,1)) + ylim(c(0,1))+
-  geom_line(col='dodgerblue4', lwd=1.9)+
-  geom_ribbon(aes(ymin=0, ymax=y.roc), fill = 'seagreen2')+
-  geom_line(data = data.frame(cbind(X1=seq(0,1,0.001), X2=seq(0,1,0.001))), aes(X1,X2), col='orangered', lty = 2, lwd=1.3)+
-  xlab('1 - specificity')+ylab('sensitivity')
+plot.roc(data.roc = data.roc)
 roc_auc_vec(truth = test$label, estimate = pred$pred, event_level = 'second')#da aggiungere nel plot
 
 ##############################################################################################################################################################
@@ -176,15 +177,8 @@ pred <- predict(model_glm, newdata = test, type = 'response')
 pred <- as.data.frame(pred)
 data.roc <- roc.curve(pred,test)
 x11()
-ggplot(data.roc,aes(x.roc,y.roc))+
-  theme(panel.background = element_rect(fill = 'gray90', colour = 'white'))+
-  xlim(c(0,1)) + ylim(c(0,1))+
-  geom_line(col='dodgerblue4', lwd=1.9)+
-  geom_ribbon(aes(ymin=0, ymax=y.roc), fill = 'seagreen2')+
-  geom_line(data = data.frame(cbind(X1=seq(0,1,0.001), X2=seq(0,1,0.001))), aes(X1,X2), col='orangered', lty = 2, lwd=1.3)+
-  xlab('1 - specificity')+ylab('sensitivity')
+plot.roc(data.roc = data.roc)
 roc_auc_vec(truth = test$label, estimate = pred$pred, event_level = 'second')#da aggiungere nel plot
-
 
 model_glm2=glm(label ~ Age + nWBV + MMSE, family = 'binomial' , data = train)
 summary(model_glm2)
