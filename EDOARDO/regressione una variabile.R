@@ -13,6 +13,27 @@ library(np)
 library(fda)
 library(locfit)
 
+#EDUC: years of education 
+#SES: socio economic status
+#MMSE: mini mental state examination (0:30 30=stato mentale perfetto. Anche persone con un iniziale deterioramento cognitivo, ma con un'alta scolarizzazione possono ottenere un punteggio pari a 29 e 30)
+#CDR: clinical dementia rating (0:3 3=perdita di memoria grave)
+#eTIV: extimated total intracranial volume 
+#nWBV: Normalize Whole Brain Volume
+#ASF: Atlas Scaling Factor (the volume-scaling factor required to match each individual to the atlas target)
+#LABEL:Demented=1
+
+data <- read.csv('data_unavar.csv', header = TRUE, sep = ',')
+data <- data[,-1]
+data$label <- ifelse(data$label=='Dem', 1, 0)
+data$label <- factor(data$label)
+train <- data[1:271,]
+test <- data[272:371,]
+
+
+#OUTLIER
+train <- train[-c(145,175),]
+
+
 freq.mmse <- NULL
 for(i in 1:(range(train$MMSE)[2]-range(train$MMSE)[1]+1)){
   freq.mmse <- c(freq.mmse, length(which(train$MMSE==(range(train$MMSE)[1]+i-1)))/dim(train)[1])
@@ -23,18 +44,18 @@ roc.curve <- function(predicted, test.set){
   spec <- NULL
   sens <- NULL
   for (i in 1:length(p0)) {
-    predicted$class.assigned <- rep('Nondem', dim(predicted)[1])
+    predicted$class.assigned <- rep(0, dim(predicted)[1])
     colnames(predicted) <- c('prob','class.assigned')
-    predicted[which(predicted$prob>=p0[i]),2] <- 'Dem'
+    predicted[which(predicted$prob>=p0[i]),2] <- 1
     true.lab <- test.set$label
     i.equal <- which(true.lab==predicted$class.assigned)
     n.equal <- length(i.equal)
     test.equal <- test.set[i.equal,]
-    n00 <- length(which(test.equal$label=='Nondem'))
+    n00 <- length(which(test.equal$label==0))
     n11 <- n.equal - n00
     
-    n01 <- length(which(predicted$class.assigned=='Nondem'&true.lab=='Dem')) #classified,true lab
-    n10 <- length(which(predicted$class.assigned=='Dem'&true.lab=='Nondem')) #classified,true lab
+    n01 <- length(which(predicted$class.assigned==0&true.lab==1)) #classified,true lab
+    n10 <- length(which(predicted$class.assigned==1&true.lab==0)) #classified,true lab
     
     sensitivity <- n11/(n01+n11)
     specificity <- n00/(n00+n10)
@@ -46,41 +67,6 @@ roc.curve <- function(predicted, test.set){
   data.frame(cbind(x.roc,y.roc))
 }
 
-dataset<- read.csv("oasis_longitudinal.csv")
-dataset <- filter(dataset, Visit==1)
-
-#EDUC: years of education 
-#SES: socio economic status
-#MMSE: mini mental state examination (0:30 30=stato mentale perfetto. Anche persone con un iniziale deterioramento cognitivo, ma con un'alta scolarizzazione possono ottenere un punteggio pari a 29 e 30)
-#CDR: clinical dementia rating (0:3 3=perdita di memoria grave)
-#eTIV: extimated total intracranial volume 
-#nWBV: Normalize Whole Brain Volume
-#ASF: Atlas Scaling Factor (the volume-scaling factor required to match each individual to the atlas target)
-
-data <- dataset[,c(6,8,9,11,13,14)]
-i.converted <- which(dataset$Group=='Converted')
-data <- data[-i.converted,]
-data.aux <- dataset[-i.converted,]
-data$label <- rep('Nondem', dim(data)[1])
-i.dem <- which(data.aux$Group=='Demented')
-data$label[i.dem] <- 'Dem'
-data$label <- factor(data$label, levels = c('Nondem', 'Dem'))
-data$M <- ifelse(data$M.F=='M',1,0)
-
-dataset2 <- read.table('C:/Users/E5440/Downloads/test set.csv', header = TRUE, sep=';')
-dataset2$label <- ifelse(dataset2$CDR > 0, 'Dem', 'Nondem')
-dataset2  <- dataset2[,c(2,4,5,7,9,10,12)]
-dataset2$M <- ifelse(dataset2$M.F=='M',1,0)
-colnames(dataset2) <- colnames(data)
-data <- rbind(data, dataset2)
-data <- data[,c(1,4,7,8)]
-
-train <- data[1:271,]
-test <- data[272:dim(data)[1],]
-
-dem <- rep(0, dim(data)[1])
-dem[which(data$label=='Dem')] <- 1
-
 #GLM WITH 1 COVARIATE
 mdl <- glm(label ~ MMSE, data = train, family = binomial)
 summary(mdl)
@@ -90,7 +76,7 @@ p.hat.param <- predict(mdl, newdata = x, type = 'response') #1/(1+exp(-mdl$coeff
 x11() #qua come scrivere le frequenze per ciascun valore di MMSE
 ggplot()+
   geom_line(aes(x$MMSE,p.hat.param), col='red')+
-  geom_point(aes(train$MMSE, as.numeric(train$label=='Dem')))
+  geom_point(aes(train$MMSE, as.numeric(train$label==1)))
 
 
 # Global polynomial regression
@@ -116,14 +102,14 @@ p.hat.poly <- predict(mdl_poly[[1]], newdata = x, type = 'response') #1/(1+exp(-
 x11()
 ggplot() +
   geom_line(aes(x$MMSE,p.hat.poly), col='red') +
-  geom_point(aes(train$MMSE, as.numeric(train$label=='Dem')))
+  geom_point(aes(train$MMSE, as.numeric(train$label==1)))
 
 #Local Likelihood 
-fit_locfit <- locfit(as.numeric(label=='Dem') ~ locfit::lp(MMSE, deg = 1, nn=3), data = train,
+fit_locfit <- locfit(as.numeric(label==1) ~ locfit::lp(MMSE, deg = 1), data = train,
                    family = "binomial", kern = "gauss")
 x11()
 plot(fit_locfit, xlab = 'MMSE', ylab = 'probability to be demented', col='red', ylim=c(0,1))
-points(train$MMSE, as.numeric(train$label=='Dem'), pch = 16)
+points(train$MMSE, as.numeric(train$label==1), pch = 16)
 grid()
 
 pred <- predict(fit_locfit, newdata = test, type = 'response')
@@ -133,15 +119,15 @@ data.roc <- roc.curve(pred, test)
 
 
 gcv.stat <- NULL
-nn <- c(1/3,1/2,1:6)
+nn <- c(1/3,1/2,0.7,1:6)
 for(i in 1:8){
-  fit <- locfit(as.numeric(label=='Dem') ~ locfit::lp(MMSE, deg = 1, nn=nn[i]), data = train,
+  fit <- locfit(as.numeric(label==1) ~ locfit::lp(MMSE, deg = 1, nn=nn[i]), data = train,
                 family = "binomial", kern = "gauss")
   gcv.stat <- c(gcv.stat, gcv(fit)[4])
 }
 nn.min <- which(gcv.stat==min(gcv.stat))
 
-gcv.locfit <- locfit(as.numeric(label=='Dem') ~ locfit::lp(MMSE, deg = 1, nn=nn[nn.min]), data = train,
+gcv.locfit <- locfit(as.numeric(label==1) ~ locfit::lp(MMSE, deg = 1, nn=nn[nn.min]), data = train,
                      family = "binomial", kern = "gauss")
 
 pred.locfit <- predict(fit_locfit, newdata = test, type = 'response')
@@ -164,7 +150,7 @@ p.hat.locfit <- predict(fit_locfit, newdata = x, type = 'response') #1/(1+exp(-m
 x11()
 ggplot() +
   geom_line(aes(x$MMSE, p.hat.locfit), col='red') +
-  geom_point(aes(train$MMSE, as.numeric(train$label=='Dem')))
+  geom_point(aes(train$MMSE, as.numeric(train$label==1)))
 
 #Local likelihood con glm
 p.hat.test <- NULL
@@ -177,7 +163,7 @@ for (i in 1:dim(x)[1]) {
 x11()
 ggplot() +
   geom_line(aes(x[,1],p.hat.test), col='red') +
-  geom_point(aes(train$MMSE, as.numeric(train$label=='Dem')), pch = 16) +
+  geom_point(aes(train$MMSE, as.numeric(train$label==1)), pch = 16) +
   xlab('MMSE') + ylab('Probability to be Demented')
 
 
@@ -207,6 +193,11 @@ pred.n.spline <- as.data.frame(pred.n.spline)
 data.roc <- roc.curve(pred.n.spline, test)
 roc_auc_vec(truth = test$label, estimate = pred.n.spline$pred.n.spline, event_level = 'second') #da aggiungere nel plot
 
+#AIC model spline = 217, AIC model Natural Spline=220
+1-mdl_spline$deviance/mdl_spline$null.deviance
+1-mdl_n_spline$deviance/mdl_n_spline$null.deviance
+#scelgo primo modello
+p.hat.spline <- predict(mdl_spline, newdata = x, type = 'response')
 
 #General Plot
 ggplot()+
@@ -214,7 +205,8 @@ ggplot()+
   geom_line(aes(x$MMSE,p.hat.poly), col='blue') +
   geom_line(aes(x$MMSE, p.hat.locfit), col='green') +
   geom_line(aes(x[,1],p.hat.test), col='orange') +
-  geom_point(aes(train$MMSE, as.numeric(train$label=='Dem'))) +
+  geom_line(aes(x$MMSE, p.hat.spline), col='purple') +
+  geom_point(aes(train$MMSE, as.numeric(train$label==1))) +
   xlab('MMSE') + ylab('Probability to be Demented') 
   
 
