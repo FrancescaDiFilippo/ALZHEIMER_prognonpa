@@ -641,40 +641,22 @@ $$
 \hat{S_{0}}(t)=\prod_{j: t_{j}^{*}<t}\left(1-\frac{1}{\sum_{k \in R\left(t_{j}^{*}\right)} \exp \left(\boldsymbol{X}_{k}^{T} \hat{\boldsymbol{\beta}}\right)}\right)
 $$
 
-```{r}
-plot(predict(mod.cox), residuals(mod.cox, type='martingale'),
-     xlab='Fitted values', ylab='Martingale residuals', main='Residual Plot', las=1)
-# Add a line for residual=0
-abline(h=0, col='red')
-# Fit a smoother for the points
-lines(smooth.spline(predict(mod.cox), residuals(mod.cox, type='martingale')), col='blue')
-```
 
-Remember to check if you can manually compute the involved quantities:
-
-```{r, class.source="extracode"}
-cox_model_matrix <- model.matrix(mod.cox)
-centered_model_matrix <- sweep(cox_model_matrix,MARGIN = 2,STATS = mod.cox$means,FUN = "-")
-manual_linear_pred <- c(centered_model_matrix%*%mod.cox$coefficients)
-bese_haz_est <- basehaz(mod.cox)
-
-# Martingale residuals
-basehaz_for_i <- Vectorize(function(t){
-  pos_haz <- which(t<=bese_haz_est$time)[1]
-  bese_haz_est$hazard[pos_haz]
-})
-
-obs_NA <- which(is.na(dataset$MMSE))
-dataset_no_NA <- dataset[-obs_NA,]
-
-martingale_res_manual <- (dataset_no_NA$status-1)- basehaz_for_i(t=dataset_no_NA$time)*exp(manual_linear_pred)
-```
-
-Alternatively
 
 ```{r}
-ggcoxdiagnostics(mod.cox, type = "martingale")
+ggcoxdiagnostics(mod.cox, type = "martingale", labels= 'age + sex + EDUC + MMSE')
 ```
+```{r}
+ggcoxdiagnostics(mod.cox_MMSE, type = "martingale" ,labels='MMSE')
+```
+```{r}
+ggcoxdiagnostics(mod.cox_ALL, type = "martingale" ,labels='ALL')
+```
+
+```{r}
+ggcoxdiagnostics(mod.cox_age_sex, type = "martingale",labels= 'age sex')
+```
+
 
 Sometimes, martingale residuals are difficult to be interpreted. The
 deviance residual is a normalized transform of the martingale residual:
@@ -698,13 +680,17 @@ residuals. Example of deviance residuals:
 ```{r}
 ggcoxdiagnostics(mod.cox, type = "deviance")
 ```
-this is a good fit 
-
-```{r, class.source="extracode"}
-deviance_res_manual <- sign(martingale_res_manual)*(-2*(martingale_res_manual+(dataset_no_NA$status-1)*log((dataset_no_NA$status-1)-martingale_res_manual)))^(1/2)
+```{r}
+ggcoxdiagnostics(mod.cox_MMSE, type = "deviance" ,labels='MMSE')
+```
+The pattern doesn't look fairly symmetric around $0$, not a good fit
+```{r}
+ggcoxdiagnostics(mod.cox_ALL, type = "deviance" ,labels='ALL')
 ```
 
-The pattern looks fairly symmetric around $0$
+```{r}
+ggcoxdiagnostics(mod.cox_age_sex, type = "deviance",labels= 'age sex')
+```
 
 A second graphical option could be to use the Schoenfeld residuals to
 examine model fit and detect outlying covariate values. Shoenfeld
@@ -717,40 +703,17 @@ is evidence of violation of the PH assumption.
 ```{r}
 ggcoxdiagnostics(mod.cox, type = "schoenfeld")
 ```
-
-```{r, class.source="extracode"}
-df_4_schoenfeld <- dataset %>%
-  tidyr::drop_na(age, sex, ph.karno, wt.loss) %>%
-  arrange(time)
-
-df_4_schoenfeld_sub <- df_4_schoenfeld %>%
-  select(age, sex, ph.karno, wt.loss) %>% 
-  mutate(sex=if_else(sex=="Male",1,0))
-
-cox_coef <- mod.cox$coefficients
-X_denom <- exp(data.matrix(df_4_schoenfeld_sub) %*% cox_coef)
-
-X_num <-
-  sweep(
-    x = df_4_schoenfeld_sub,
-    MARGIN = 1,
-    STATS = X_denom,
-    FUN = "*"
-  )
-
-X_bar <- matrix(nrow = nrow(X_num), ncol = ncol(X_num))
-X_den <- numeric(nrow(X_num))
-
-for(i in 1:nrow(X_num)){
-  time_instant <- df_4_schoenfeld$time[i]
-  risk_set <- which(time_instant<=df_4_schoenfeld$time)
-  X_bar[i,] <- colSums(X_num[risk_set,])
-  X_den[i] <- sum(X_denom[risk_set])
-}
-
-schoenfeld_calc <- df_4_schoenfeld_sub-sweep(X_bar,MARGIN = 1,STATS = X_den,FUN = "/")
-schoenfeld_manual <- schoenfeld_calc[df_4_schoenfeld$status==2,]
+```{r}
+ggcoxdiagnostics(mod.cox_MMSE, type = "schoenfeld")
 ```
+```{r}
+ggcoxdiagnostics(mod.cox_ALL, type = "schoenfeld" ,labels='ALL')
+```
+
+```{r}
+ggcoxdiagnostics(mod.cox_age_sex, type = "schoenfeld",labels= 'age sex')
+```
+
 
 Another graphical method for checking proportional hazards is to plot
 $log(-log(KM(t)))$ vs. $t$ or $log(t)$ and look for parallelism. This
@@ -774,7 +737,7 @@ legend('topleft', c("Female", "Male"),
        lty=c(1,1), lwd=c(2,2), col=c("deeppink2","dodgerblue2"))
 ```
 
-Curves seem to be parallel -\> PH assumption seems to be satisfied for
+Curves seem to be NOT parallel -\> PH assumption seems NOT satisfied for
 gender.
 
 The function `cox.zph()` in the survival package provides a convenient
@@ -801,25 +764,43 @@ cox.zph() return tests for each X and for the global model
 test.ph <- cox.zph(mod.cox)
 test.ph
 ```
-
-From the output above, the global test is statistically significant.
+From the output above, the global test is statistically significant (small pvalue, reject H0).
 Therefore, we can not assume the proportional hazards. In particular,
-the test for ph.karno is highly significant.
+the test for ph.MMSE is highly significant.
+
+```{r}
+test.ph_ALL <- cox.zph(mod.cox_ALL)
+test.ph_ALL
+```
+same as before 
+```{r}
+test.ph_MMSE <- cox.zph(mod.cox_MMSE)
+test.ph_MMSE
+```
+
+```{r}
+test.ph_age_sex <- cox.zph(mod.cox_age_sex)
+test.ph_age_sex
+```
+age is higly significant
 
 Plot the scaled schoenfeld residuals:
 
-```{r}
-par(mfrow=c(2,2))
-for(i in 1:4){
-  plot(test.ph[i])
-  abline(h=0, col='red')
-}
-```
-
-Alternatively
 
 ```{r}
 ggcoxdiagnostics(mod.cox, type = "scaledsch")
+```
+
+```{r}
+ggcoxdiagnostics(mod.cox_MMSE, type = "scaledsch")
+```
+
+```{r}
+ggcoxdiagnostics(mod.cox_ALL, type = "scaledsch")
+```
+
+```{r}
+ggcoxdiagnostics(mod.cox_age_sex, type = "scaledsch")
 ```
 
 So... What do we do? As a very basic primer on Survival Analysis we will
@@ -850,7 +831,7 @@ each strata-wise contribution). This is easily accomplished in R by
 using the `strata()` argument:
 
 ```{r}
-mod.cox.strata <- coxph(Surv(time, status) ~ age + sex + strata(ph.karno) + wt.loss, data =  dataset)
+mod.cox.strata <- coxph(Surv(time, status) ~ age + sex + strata(MMSE) , data =  dataset)
 summary(mod.cox.strata)
 ```
 
@@ -860,5 +841,17 @@ Test for PH assumption
 test.ph.strata <- cox.zph(mod.cox.strata)
 test.ph.strata
 ```
-
+ 
 PH assumptions are satisfied for all variables and for the global model.
+
+```{r}
+mod.cox.strata_ALL <- coxph(Surv(time, status) ~  age + sex + EDUC + strata(MMSE)+ SES + eTIV, data =  dataset)
+summary(mod.cox.strata_ALL)
+```
+
+Test for PH assumption
+
+```{r}
+test.ph.strata_ALL <- cox.zph(mod.cox.strata_ALL)
+test.ph.strata_ALL
+```
