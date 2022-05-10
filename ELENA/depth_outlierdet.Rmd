@@ -34,9 +34,19 @@ library(aplpack)
 To visualize the outliers in this context we retort to a bagplot matrix:
 
 ```{r}
-bagplot_matrix <- aplpack::bagplot.pairs(dataset_longitudinal)  # bagplot dimension by dimension
+bagplot_matrix <- aplpack::bagplot.pairs(dataset_longitudinal, main = 'Pairs of bagplots')  # bagplot dimension by dimension
 ```
-utilizzando questo bagplot cerco di capire quali confronti abbia senso fare per trovare gli outlier con le depth measures
+
+Using this bagplot we want to try to understan which comparisons are reasonable to find outliers using the depth measures.
+
+
+Indeed the outlier detection becomes more difficult when the dimension increases, as
+
+-   some outliers may be wrongly flagged as genuine points
+-   some good points may be wrongly flagged as outliers
+
+These phenomena are respectively denoted as **masking** and **swamping**, we will cover it in details during the robust statistics analysis
+
 
 
 ```{r}
@@ -57,7 +67,62 @@ depthContour(
   graph_params = list(cex=.01, pch=1),
   pmean = F
 )
+```
 
+```{r}
+depthContour(
+  data.frame(dataset_longitudinal$Age, dataset_longitudinal$MMSE),
+  depth_params = list(method = 'spatial'),
+  points = TRUE,
+  colors = colorRampPalette(c('white', 'navy')),
+  levels = 10,
+  pdmedian = F,
+  graph_params = list(cex=.01, pch=1),
+  pmean = F
+)
+```
+
+```{r}
+depthContour(
+  as.matrix(cbind(dataset_longitudinal$Age, dataset_longitudinal$MMSE)),
+  depth_params = list(method = 'LP'),
+  points = TRUE,
+  colors = colorRampPalette(c('white', 'navy')),
+  levels = 10,
+  pdmedian = F,
+  graph_params = list(cex=.01, pch=1),
+  pmean = F
+)
+```
+
+```{r}
+depthContour(
+  as.matrix(cbind(dataset_longitudinal$Age, dataset_longitudinal$MMSE)),
+  depth_params = list(method = 'Mahalanobis'),
+  points = TRUE,
+  colors = colorRampPalette(c('white', 'navy')),
+  levels = 10,
+  pdmedian = F,
+  graph_params = list(cex=.01, pch=1),
+  pmean = F
+)
+```
+
+```{r}
+depthContour(
+  data.frame(dataset_longitudinal$Age, dataset_longitudinal$MMSE),
+  depth_params = list(method = 'Tukey'),
+  points = TRUE,
+  colors = colorRampPalette(c('white', 'navy')),
+  levels = 10,
+  pdmedian = F,
+  graph_params = list(cex=.01, pch=1),
+  pmean = F
+)
+```
+
+
+```{r}
 bags1 <- bagplot(data.frame(dataset_longitudinal$Age, dataset_longitudinal$MMSE))
 
 ```
@@ -68,6 +133,21 @@ outlying_obs1
 
 which(dataset_longitudinal$Age==outlying_obs1[,1] & dataset_longitudinal$MMSE==outlying_obs1[,2])
 ```
+
+
+```{r}
+depthContour(
+  data.frame(dataset_longitudinal$EDUC, dataset_longitudinal$MMSE),
+  depth_params = list(method = 'Mahalanobis'),
+  points = TRUE,
+  colors = colorRampPalette(c('white', 'navy')),
+  levels = 10,
+  pdmedian = F,
+  graph_params = list(cex=.01, pch=1),
+  pmean = F
+)
+```
+
 
 
 ```{r}
@@ -187,7 +267,10 @@ outlying_obs6
 
 which(dataset_longitudinal$Age==outlying_obs6[,1] & dataset_longitudinal$EDUC==outlying_obs6[,2])
 ```
-queste tre persone hanno una educazione molto bassa rispetto agli altri
+
+
+We can notice that these three persons have an eduction really lower wth respect to the others.
+
 
 
 
@@ -287,18 +370,18 @@ which(dataset_longitudinal$Age==outlying_obs10[,1] & dataset_longitudinal$eTIV==
 
 
 
-il paziente OAS2_0048 alla riga 101 risulta anomalo alla quarta visita per MMSE vs Age
+The patient OAS2_0048 at line 101 results as anomalous in the fourth visit for MMSE vs Age.
 
-il paziente OAS2_0048 alla riga 102 risulta anomalo alla quinta visita sia rispetto a MMSE vs Age, che MMSE vs le ultrime 3 colonne (che sono dipendenti)
+The patient OAS2_0048 at line 102 results as anomalous in the fifth visit for both MMSE vs Age, and MMSE vs the last 3 columns (that are dependents).
 
-il paziente	OAS2_0040 alle righe 79, 80, 81 anomalo in tutte e tre le visite per EDUC vs Age e vs le ultime 3 colonne
+The patient	OAS2_0040 at lines 79, 80, 81 anomalous in all the 3 visits for EDUC vs Age and vs the last 3 columns.
 
-il paziente OAS2_0066 alla riga 140 risulta anomalo alla prima visita solo per Age vs eTIV (!attenzione: non per le altre due colonne con cui etiv è dipendente! -> può essere il valore di etiv sbagliato nella riga 140? e soprattutto non LL visita successiva)
-
-
+The patient OAS2_0066 at line 140 results as anomalous in the first visit only for Age vs eTIV (!attention: non per le altre due colonne con cui etiv è dipendente! -> può essere il valore di etiv sbagliato nella riga 140? e soprattutto non LL visita successiva)
 
 
-now we'll do the same with the complete dataset
+
+
+Now we'll do the same with the complete dataset considering only the first visit:
 
 ```{r}
 dataset_train <- read.csv("train.csv", header = T)
