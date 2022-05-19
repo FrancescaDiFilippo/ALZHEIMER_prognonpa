@@ -1,0 +1,309 @@
+---
+title: 'anova analysis'
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+  html_notebook: default
+---
+
+
+```{r setup, include=FALSE}
+library(rgl)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::knit_hooks$set(webgl = hook_webgl)
+```
+
+```{css, echo=FALSE}
+.extracode {
+background-color: lightblue;
+}
+```
+```{r}
+setwd('C:/Users/Elena/Desktop/Elena/Polimi/MAGISTRALE/Nonparametric statistics/Progetto/github repository/ALZHEIMER_prognonpa/Elena')
+dataset_xsectional <- read.csv("oasis_cross-sectional.csv", header = T)
+dataset_longitudinal <- read.csv("oasis_longitudinal.csv", header = T)
+```
+
+
+We are interested in the importance of variables sex and age in the prediction of the state of the patient (if demented or not). So we can start analyzing these two variables wrt the grouping: sex and age can be thought as categorical and we use CDR as dependent variable.
+
+
+dataset longitudinal
+
+```{r}
+data1 <- data.frame(as.factor(dataset_longitudinal$M.F), as.factor(dataset_longitudinal$Age), dataset_longitudinal$CDR)
+colnames(data1) <- c('M.F','Age','CDR')
+```
+
+```{r}
+anova1 <- aov(CDR~M.F+Age+M.F:Age, data=data1)
+summary(anova1)
+```
+
+sex is really significant, Age is significat at 5% but not at 1%, the interaction between them is not significant
+
+
+
+```{r}
+plot(anova1)
+```
+
+
+the residuals seem to be not normal nor homogenously distributed in the graph (so not homoschedastic)
+
+
+```{r}
+shapiro.test(anova1$residuals)
+```
+```{r}
+shapiro.test(aov(CDR~M.F, data=data1)$residuals)
+```
+```{r}
+shapiro.test(aov(CDR~Age, data=data1)$residuals)
+```
+we don't have normality of residuals
+
+
+```{r}
+bartlett.test(CDR~M.F, data=data1)
+```
+ok homoschedasticity 
+
+
+```{r}
+#datadumm <- data1
+#datadumm$dummy <- ifelse(datadumm$CDR>0,1,0)
+bartlett.test(CDR~Age, data=data1)
+```
+(non ho capito perchè non vada)
+
+
+
+since we cannot assume normality of residuals (pvalue very low) we should use a nonparametric test (kruskal wallis)
+
+
+```{r}
+kw1 <- kruskal.test(CDR~M.F, data=data1)
+kw1
+```
+hence the sex is significant
+
+
+```{r}
+kw2 <- kruskal.test(CDR~Age, data=data1)
+kw2
+```
+and the age is not
+
+
+
+
+Check for only the first visit of each patient to satisfy the independence condition:
+
+```{r}
+data11 <- dataset_longitudinal[which(dataset_longitudinal$Visit == 1),]
+data11 <- data.frame(as.factor(data11$M.F), as.factor(data11$Age), data11$CDR)
+colnames(data11) <- c('M.F','Age','CDR')
+```
+
+```{r}
+anova11 <- aov(CDR~M.F+Age+M.F:Age, data=data11)
+summary(anova11)
+```
+
+sex is really significant, Age is significat at 5% but not at 1%, the interaction between them is not significant
+
+
+
+```{r}
+plot(anova11)
+```
+
+
+the residuals seem to be not normal nor homogenously distributed in the graph (so not homoschedastic)
+
+
+```{r}
+shapiro.test(anova11$residuals)
+```
+```{r}
+shapiro.test(aov(CDR~M.F, data=data11)$residuals)
+```
+```{r}
+shapiro.test(aov(CDR~Age, data=data11)$residuals)
+```
+we don't have normality of residuals
+
+
+```{r}
+bartlett.test(CDR~M.F, data=data11)
+```
+ok homoschedasticity 
+
+
+```{r}
+plot(aov(CDR~Age, data=data11))
+```
+
+```{r}
+bartlett.test(CDR~Age, data=data11)
+```
+(non ho capito perchè non vada)
+
+
+
+since we cannot assume normality of residuals (pvalue very low) we should use a nonparametric test (kruskal wallis)
+
+
+```{r}
+kw11 <- kruskal.test(CDR~M.F, data=data11)
+kw11
+```
+hence the sex is significant
+
+
+```{r}
+kw12 <- kruskal.test(CDR~Age, data=data11)
+kw12
+```
+and the age is not
+
+
+
+
+
+
+Now we add the cross-sectional dataset:
+
+```{r}
+data2 <- data.frame(as.factor(dataset_xsectional$M.F), as.factor(dataset_xsectional$Age), dataset_xsectional$CDR)
+colnames(data2) <- c('M.F','Age','CDR')
+datat <- rbind(data11, data2)
+#datat <- na.omit(datat)
+```
+
+```{r}
+anova2 <- aov(CDR~M.F+Age+M.F:Age, data=datat)
+summary(anova2)
+```
+
+
+
+
+```{r}
+plot(anova2)
+```
+
+
+the residuals seem to be not normal nor homogenously distributed in the graph (so not homoschedastic)
+
+
+```{r}
+shapiro.test(anova2$residuals)
+```
+```{r}
+shapiro.test(aov(CDR~M.F, data=datat)$residuals)
+```
+```{r}
+shapiro.test(aov(CDR~Age, data=datat)$residuals)
+```
+we don't have normality of residuals
+
+
+```{r}
+bartlett.test(CDR~M.F, data=datat)
+```
+ok homoschedasticity 
+
+
+```{r}
+bartlett.test(CDR~Age, data=datat)
+```
+(non ho capito perchè non vada)
+
+
+
+since we cannot assume normality of residuals (pvalue very low) we should use a nonparametric test (kruskal wallis)
+
+
+```{r}
+kw21 <- kruskal.test(CDR~M.F, data=datat)
+kw21
+```
+hence the sex is significant
+
+
+```{r}
+kw22 <- kruskal.test(CDR~Age, data=datat)
+kw22
+```
+
+but also age is significant!
+
+
+
+
+
+Now check the other variables (with the complete dataset):
+
+```{r}
+library(dplyr)
+data_l <- select(dataset_longitudinal, 6, 8:15)
+data_l <- data_l[which(dataset_longitudinal$Visit==1),]
+data_x <- select(dataset_xsectional, 2, 4:11)
+colnames(data_x)[colnames(data_x) == 'Educ'] <- 'EDUC'
+data_total<-bind_rows(data_l,data_x)
+```
+
+
+
+```{r}
+anova3 <- aov(CDR~EDUC, data=data_total)
+summary(anova3)
+shapiro.test(anova3$residuals)
+kw3 <- kruskal.test(CDR~EDUC, data=data_total)
+kw3
+```
+```{r}
+anova4 <- aov(CDR~SES, data=data_total)
+summary(anova4)
+shapiro.test(anova4$residuals)
+kw4 <- kruskal.test(CDR~SES, data=data_total)
+kw4
+```
+```{r}
+anova5 <- aov(CDR~MMSE, data=data_total)
+summary(anova5)
+shapiro.test(anova5$residuals)
+kw5 <- kruskal.test(CDR~MMSE, data=data_total)
+kw5
+```
+```{r}
+anova6 <- aov(CDR~eTIV, data=data_total)
+summary(anova6)
+shapiro.test(anova6$residuals)
+kw6 <- kruskal.test(CDR~eTIV, data=data_total)
+kw6
+```
+```{r}
+anova7 <- aov(CDR~nWBV, data=data_total)
+summary(anova7)
+shapiro.test(anova7$residuals)
+kw7 <- kruskal.test(CDR~nWBV, data=data_total)
+kw7
+```
+```{r}
+anova8 <- aov(CDR~ASF, data=data_total)
+summary(anova8)
+shapiro.test(anova8$residuals)
+kw8 <- kruskal.test(CDR~ASF, data=data_total)
+kw8
+```
+
+all significant at 5%
+
+
+
+
+

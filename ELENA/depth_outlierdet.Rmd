@@ -97,7 +97,7 @@ depthContour(
 
 ```{r}
 depthContour(
-  as.matrix(cbind(dataset_longitudinal$Age, dataset_longitudinal$MMSE)),
+  cbind(dataset_longitudinal$Age, dataset_longitudinal$MMSE),
   depth_params = list(method = 'Mahalanobis'),
   points = TRUE,
   colors = colorRampPalette(c('white', 'navy')),
