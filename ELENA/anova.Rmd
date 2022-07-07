@@ -29,77 +29,7 @@ dataset_longitudinal <- read.csv("oasis_longitudinal.csv", header = T)
 We are interested in the importance of variables sex and age in the prediction of the state of the patient (if demented or not). So we can start analyzing these two variables wrt the grouping: sex and age can be thought as categorical and we use CDR as dependent variable.
 
 
-dataset longitudinal
-
-```{r}
-data1 <- data.frame(as.factor(dataset_longitudinal$M.F), as.factor(dataset_longitudinal$Age), dataset_longitudinal$CDR)
-colnames(data1) <- c('M.F','Age','CDR')
-```
-
-```{r}
-anova1 <- aov(CDR~M.F+Age+M.F:Age, data=data1)
-summary(anova1)
-```
-
-sex is really significant, Age is significat at 5% but not at 1%, the interaction between them is not significant
-
-
-
-```{r}
-plot(anova1)
-```
-
-
-the residuals seem to be not normal nor homogenously distributed in the graph (so not homoschedastic)
-
-
-```{r}
-shapiro.test(anova1$residuals)
-```
-```{r}
-shapiro.test(aov(CDR~M.F, data=data1)$residuals)
-```
-```{r}
-shapiro.test(aov(CDR~Age, data=data1)$residuals)
-```
-we don't have normality of residuals
-
-
-```{r}
-bartlett.test(CDR~M.F, data=data1)
-```
-ok homoschedasticity 
-
-
-```{r}
-#datadumm <- data1
-#datadumm$dummy <- ifelse(datadumm$CDR>0,1,0)
-bartlett.test(CDR~Age, data=data1)
-```
-(non ho capito perchè non vada)
-
-
-
-since we cannot assume normality of residuals (pvalue very low) we should use a nonparametric test (kruskal wallis)
-
-
-```{r}
-kw1 <- kruskal.test(CDR~M.F, data=data1)
-kw1
-```
-hence the sex is significant
-
-
-```{r}
-kw2 <- kruskal.test(CDR~Age, data=data1)
-kw2
-```
-and the age is not
-
-
-
-
-Check for only the first visit of each patient to satisfy the independence condition:
+Check for only the **FIRST** visit of each patient to have independence
 
 ```{r}
 data11 <- dataset_longitudinal[which(dataset_longitudinal$Visit == 1),]
@@ -112,7 +42,7 @@ anova11 <- aov(CDR~M.F+Age+M.F:Age, data=data11)
 summary(anova11)
 ```
 
-sex is really significant, Age is significat at 5% but not at 1%, the interaction between them is not significant
+sex is really significant, Age is not significat, the interaction between them is significant
 
 
 
@@ -128,32 +58,22 @@ the residuals seem to be not normal nor homogenously distributed in the graph (s
 shapiro.test(anova11$residuals)
 ```
 ```{r}
-shapiro.test(aov(CDR~M.F, data=data11)$residuals)
+anova12 <- aov(CDR~M.F, data=data11)
+summary(anova12)
+shapiro.test(anova12$residuals)
+plot(anova12)
 ```
 ```{r}
-shapiro.test(aov(CDR~Age, data=data11)$residuals)
+anova13 <-aov(CDR~Age, data=data11)
+summary(anova13)
+shapiro.test(anova13$residuals)
+plot(anova13)
 ```
 we don't have normality of residuals
 
 
-```{r}
-bartlett.test(CDR~M.F, data=data11)
-```
-ok homoschedasticity 
 
-
-```{r}
-plot(aov(CDR~Age, data=data11))
-```
-
-```{r}
-bartlett.test(CDR~Age, data=data11)
-```
-(non ho capito perchè non vada)
-
-
-
-since we cannot assume normality of residuals (pvalue very low) we should use a nonparametric test (kruskal wallis)
+since we cannot assume normality of residuals (pvalue very low) we should use a nonparametric test (ex kruskal wallis)
 
 
 ```{r}
@@ -170,11 +90,73 @@ kw12
 and the age is not
 
 
+or use a permutation test:
+
+```{r}
+B = 1000
+seed = 26111992
+```
+
+```{r}
+# TEST ON THE FACTOR MF
+T0_MF <- summary.aov(aov(CDR ~  M.F, data = data11))[[1]][1,4]
+# residuals under H0
+# km = mu
+residuals.H0MF <- data11$CDR - mean(data11$CDR)
+
+# Note that in this case, permuting the residuals under H0 
+# and permuting the data is exactly the same:
+n <- nrow(data11)
+permutation <- sample(n)
+CDR.perm.H0MF <- mean(data11$CDR) + residuals.H0MF[permutation]
+CDR.perm  <- data11$CDR[permutation]
+
+```
+
+```{r}
+T_MF <- numeric(B)
+for(perm in 1:B){
+  permutation <- sample(n)
+  CDR.perm <- data11$CDR[permutation]
+  T_MF[perm] <- summary.lm(aov(CDR.perm ~ M.F , data = data11))$f[1]
+  
+}
+sum(T_MF >= T0_MF)/B
+
+```
 
 
 
+```{r}
+# TEST ON THE FACTOR Age
+T0_Age <- summary.aov(aov(CDR ~  Age, data = data11))[[1]][1,4]
+# residuals under H0
+# km = mu
+residuals.H0Age <- data11$CDR - mean(data11$CDR)
 
-Now we add the cross-sectional dataset:
+# Note that in this case, permuting the residuals under H0 
+# and permuting the data is exactly the same:
+n <- nrow(data11)
+permutation <- sample(n)
+CDR.permAge  <- data11$CDR[permutation]
+
+```
+
+```{r}
+T_Age <- numeric(B)
+for(perm in 1:B){
+  permutation <- sample(n)
+  CDR.permAge <- data11$CDR[permutation]
+  T_Age[perm] <- summary.lm(aov(CDR.permAge ~ Age , data = data11))$f[1]
+  
+}
+sum(T_Age >= T0_Age)/B
+
+```
+
+
+
+Now we add the cross-sectional dataset (still with only the first visit to have independent data):
 
 ```{r}
 data2 <- data.frame(as.factor(dataset_xsectional$M.F), as.factor(dataset_xsectional$Age), dataset_xsectional$CDR)
@@ -196,8 +178,7 @@ plot(anova2)
 ```
 
 
-the residuals seem to be not normal nor homogenously distributed in the graph (so not homoschedastic)
-
+the residuals seem to be not normal
 
 ```{r}
 shapiro.test(anova2$residuals)
@@ -211,20 +192,9 @@ shapiro.test(aov(CDR~Age, data=datat)$residuals)
 we don't have normality of residuals
 
 
-```{r}
-bartlett.test(CDR~M.F, data=datat)
-```
-ok homoschedasticity 
 
 
-```{r}
-bartlett.test(CDR~Age, data=datat)
-```
-(non ho capito perchè non vada)
-
-
-
-since we cannot assume normality of residuals (pvalue very low) we should use a nonparametric test (kruskal wallis)
+since we cannot assume normality of residuals (pvalue very low) we should use a nonparametric test (ex kruskal wallis)
 
 
 ```{r}
@@ -239,18 +209,182 @@ kw22 <- kruskal.test(CDR~Age, data=datat)
 kw22
 ```
 
-but also age is significant!
+but also age is significant (reject H0 of being not significant)!
+
+
+
+```{r}
+# TEST ON THE FACTOR MF
+T0_MF <- summary.aov(aov(CDR ~  M.F, data = datat))[[1]][1,4]
+# residuals under H0
+# km = mu
+residuals.H0MF <- datat$CDR - mean(datat$CDR)
+
+# Note that in this case, permuting the residuals under H0 
+# and permuting the data is exactly the same:
+n <- nrow(datat)
+permutation <- sample(n)
+CDR.perm        <- datat$CDR[permutation]
+
+```
+
+```{r}
+T_MF <- numeric(B)
+for(perm in 1:B){
+  permutation <- sample(n)
+  CDR.perm <- datat$CDR[permutation]
+  T_MF[perm] <- summary.lm(aov(CDR.perm ~ M.F , data = datat))$f[1]
+  
+}
+sum(T_MF >= T0_MF)/B
+
+```
+
+```{r}
+# TEST ON THE FACTOR Age
+T0_Age <- summary.aov(aov(CDR ~  Age, data = datat))[[1]][1,4]
+# residuals under H0
+# km = mu
+residuals.H0Age <- datat$CDR - mean(datat$CDR)
+
+# Note that in this case, permuting the residuals under H0 
+# and permuting the data is exactly the same:
+n <- nrow(datat)
+permutation <- sample(n)
+CDR.permAge       <- datat$CDR[permutation]
+
+```
+
+```{r}
+T_Age <- numeric(B)
+for(perm in 1:B){
+  permutation <- sample(n)
+  CDR.permAge <- datat$CDR[permutation]
+  T_Age[perm] <- summary.lm(aov(CDR.permAge ~ Age , data = datat))$f[1]
+  
+}
+sum(T_Age >= T0_Age)/B
+
+```
+
+so both age and sex are signficant (we reject H0)
+
+
+
+We could consider only the cross-sectional dataset (made by only first visits):
+
+
+```{r}
+anova22 <- aov(CDR~M.F+Age+M.F:Age, data=data2)
+summary(anova22)
+```
+
+```{r}
+plot(anova22)
+```
+
+
+```{r}
+shapiro.test(anova22$residuals)
+```
+```{r}
+shapiro.test(aov(CDR~M.F, data=data2)$residuals)
+```
+```{r}
+shapiro.test(aov(CDR~Age, data=data2)$residuals)
+```
+we don't have normality of residuals
+
+
+
+since we cannot assume normality of residuals (pvalue very low) we should use a nonparametric test (ex kruskal wallis)
+
+
+```{r}
+kw212 <- kruskal.test(CDR~M.F, data=data2)
+kw212
+```
+hence the sex is not significant at 5%
+
+
+```{r}
+kw222 <- kruskal.test(CDR~Age, data=data2)
+kw222
+```
+
+but also age is significant
+
+
+or permutation test: 
+
+```{r}
+# TEST ON THE FACTOR MF
+T0_MF <- summary.aov(aov(CDR ~  M.F, data = data2))[[1]][1,4]
+# residuals under H0
+# km = mu
+residuals.H0MF <- data2$CDR - mean(data2$CDR)
+
+# Note that in this case, permuting the residuals under H0 
+# and permuting the data is exactly the same:
+n <- nrow(data2)
+permutation <- sample(n)
+CDR.perm        <- data2$CDR[permutation]
+
+```
+
+```{r}
+T_MF <- numeric(B)
+for(perm in 1:B){
+  permutation <- sample(n)
+  CDR.perm <- data2$CDR[permutation]
+  T_MF[perm] <- summary.lm(aov(CDR.perm ~ M.F , data = data2))$f[1]
+  
+}
+sum(T_MF >= T0_MF)/B
+
+```
+
+```{r}
+# TEST ON THE FACTOR Age
+T0_Age <- summary.aov(aov(CDR ~  Age, data = data2))[[1]][1,4]
+# residuals under H0
+# km = mu
+residuals.H0Age <- data2$CDR - mean(data2$CDR)
+
+# Note that in this case, permuting the residuals under H0 
+# and permuting the data is exactly the same:
+n <- nrow(data2)
+permutation <- sample(n)
+CDR.permAge       <- data2$CDR[permutation]
+
+```
+
+```{r}
+T_Age <- numeric(B)
+for(perm in 1:B){
+  permutation <- sample(n)
+  CDR.permAge <- data2$CDR[permutation]
+  T_Age[perm] <- summary.lm(aov(CDR.permAge ~ Age , data = data2))$f[1]
+  
+}
+sum(T_Age >= T0_Age)/B
+
+```
+So in this case sex is not significant at 5% but age is.
+
+However in our study we will consider the whole dataset of first visit, where both sex and age are significant.
 
 
 
 
 
-Now check the other variables (with the complete dataset):
+
+
+We can also fastly check the other variables (with the complete dataset of first visits):
 
 ```{r}
 library(dplyr)
-data_l <- select(dataset_longitudinal, 6, 8:15)
-data_l <- data_l[which(dataset_longitudinal$Visit==1),]
+data_l <- select(dataset_longitudinal[which(dataset_longitudinal$Visit == 1),], 6, 8:15)
 data_x <- select(dataset_xsectional, 2, 4:11)
 colnames(data_x)[colnames(data_x) == 'Educ'] <- 'EDUC'
 data_total<-bind_rows(data_l,data_x)
@@ -301,7 +435,7 @@ kw8 <- kruskal.test(CDR~ASF, data=data_total)
 kw8
 ```
 
-all significant at 5%
+all significant variables
 
 
 
