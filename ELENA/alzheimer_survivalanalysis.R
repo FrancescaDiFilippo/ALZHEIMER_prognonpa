@@ -168,34 +168,34 @@ ggsurvplot(fit,
 
 
 
-
-# riduco a 13 e 13
-
-data_surv_ridotto <- slice(dataset_surv, 1:16, 18, 26, 44, 51, 55, 60, 63, 69, 70, 81)
-
-fit2 <- survfit(Surv(time_y, status_fact=='Event') ~ 1, data = data_surv_ridotto)
-
-summary(fit2)
-
-kable(head(tidy(fit2),20))
-
-median_St2 <- fit2$time[fit2$surv<=0.5][1]  
-
-#surv_median(fit) 
-
-x11()
-plot(fit2, conf.int = T, xlab='Time [days]', ylab = 'Survival Probability', col='red',
-     main="Kaplan-Meier Curve for Dementia Survival")
-
-x11()  
-ggsurvplot(fit2,
-           risk.table = TRUE, # Add risk table
-           risk.table.col = "strata", # Change risk table color by groups
-           surv.median.line = "hv", # Specify median survival
-           ggtheme = theme_bw(), # Change ggplot2 theme
-           break.time.by=120,
-           title="Kaplan-Meier Curve for Dementia Survival")
-
+# 
+# # riduco a 13 e 13
+# 
+# data_surv_ridotto <- slice(dataset_surv, 1:16, 18, 26, 44, 51, 55, 60, 63, 69, 70, 81)
+# 
+# fit2 <- survfit(Surv(time_y, status_fact=='Event') ~ 1, data = data_surv_ridotto)
+# 
+# summary(fit2)
+# 
+# kable(head(tidy(fit2),20))
+# 
+# median_St2 <- fit2$time[fit2$surv<=0.5][1]  
+# 
+# #surv_median(fit) 
+# 
+# x11()
+# plot(fit2, conf.int = T, xlab='Time [days]', ylab = 'Survival Probability', col='red',
+#      main="Kaplan-Meier Curve for Dementia Survival")
+# 
+# x11()  
+# ggsurvplot(fit2,
+#            risk.table = TRUE, # Add risk table
+#            risk.table.col = "strata", # Change risk table color by groups
+#            surv.median.line = "hv", # Specify median survival
+#            ggtheme = theme_bw(), # Change ggplot2 theme
+#            break.time.by=120,
+#            title="Kaplan-Meier Curve for Dementia Survival")
+# 
 
 
 
@@ -221,19 +221,19 @@ ggsurvplot(fit,
 
 
 
-
-cumulative_incidence2 <- 1 - fit2$surv
-
-x11()
-ggsurvplot(fit2,
-           risk.table = TRUE, # Add risk table
-           risk.table.col = "strata", # Change risk table color by groups
-           surv.median.line = "hv", # Specify median survival
-           ggtheme = theme_bw(), # Change ggplot2 theme
-           break.time.by=120,
-           fun='event',
-           title="Cumulative Incidence Curve for Dementia Survival")
-
+# 
+# cumulative_incidence2 <- 1 - fit2$surv
+# 
+# x11()
+# ggsurvplot(fit2,
+#            risk.table = TRUE, # Add risk table
+#            risk.table.col = "strata", # Change risk table color by groups
+#            surv.median.line = "hv", # Specify median survival
+#            ggtheme = theme_bw(), # Change ggplot2 theme
+#            break.time.by=120,
+#            fun='event',
+#            title="Cumulative Incidence Curve for Dementia Survival")
+# 
 
 
 
@@ -245,7 +245,7 @@ x11()
 ggsurvplot(fit,
            risk.table = TRUE, # Add risk table
            ggtheme = theme_bw(), # Change ggplot2 theme
-           break.time.by=1,
+           break.time.by=120,
            fun='cumhaz',
            title="Cumulative Hazard Curve for Dementia Survival")
 
@@ -268,6 +268,55 @@ hist(dataset_surv$Age, xlab='Age [years]', main='Histogram of age in Dementia Da
 
 
 summary(dataset_surv$Age)
+
+
+
+
+
+
+
+fit.educ <- survfit(Surv(time_y, status_fact=='Event') ~ EDUC, data=dataset_surv)
+x11()
+ggsurvplot(fit.educ, conf.int = F, risk.table.col = "strata", legend='none')
+
+
+x11()
+hist(dataset_surv$EDUC, xlab='EDUC [levels]', main='Histogram of education in Dementia Data')
+
+
+summary(dataset_surv$EDUC)
+
+
+
+
+fit.MMSE <- survfit(Surv(time_y, status_fact=='Event') ~ MMSE, data=dataset_surv)
+x11()
+ggsurvplot(fit.MMSE, conf.int = F, risk.table.col = "strata", legend='none')
+
+
+x11()
+hist(dataset_surv$MMSE, xlab='MMSE', main='Histogram of MMSE in Dementia Data')
+
+
+summary(dataset_surv$MMSE)
+
+
+
+
+fit.etiv <- survfit(Surv(time_y, status_fact=='Event') ~ eTIV, data=dataset_surv)
+x11()
+ggsurvplot(fit.etiv, conf.int = F, risk.table.col = "strata", legend='none')
+
+
+x11()
+hist(dataset_surv$eTIV, xlab='eTIV', main='Histogram of eTIV in Dementia Data')
+
+
+summary(dataset_surv$eTIV)
+
+
+
+
 
 
 
