@@ -242,8 +242,8 @@ plotting a histogram showing the distribution of age.
 
 ```{r}
 attach(dataset)
-hist(dataset[sex=='0'& Group=='Converted',]$age, xlab='Age [years]', main='Histogram of age in Alzheimer Data', col="darkblue",bin=10)
-hist(dataset[sex=='1',]$age, xlab='Age [years]', main='Histogram of age in Alzheimer Data', col="red")
+hist(dataset[sex=='0'& Group=='Converted',]$age, xlab='Age [years]', main='Histogram of age of Converted in Alzheimer Data', col="darkblue",bin=10)
+hist(dataset[sex=='1'& Group=='Converted',]$age, xlab='Age [years]', main='Histogram of age of Convertein Alzheimer Data', col="red",bin=10)
 hist(dataset$age, xlab='Age [years]', main='Histogram of age in Alzheimer Data')
 summary(dataset[sex=='1',]$age)
 ```
@@ -261,6 +261,13 @@ As usual, the function `summary()` produces a more complete report:
 
 ```{r}
 summary(cox.age)
+```
+```{r}
+plot(survfit(cox.age, data=dataset), 
+     col="darkorange2", lwd=2, lty=1,
+     xlab='Time [days]', ylab='Survival Probability',
+     main='Baseline estimated survival probability')
+grid()
 ```
 
 The Cox regression results can be interpreted as follows:
@@ -321,10 +328,11 @@ proportion, by default at the mean values of covariates.
 Plot the baseline survival function S_0(t)
 
 ```{r}
+cols=  brewer.pal(3, "RdPu")
 plot(survfit(cox.age, data=dataset), 
-     col="darkorange2", lwd=2, lty=1,
-     xlab='Time [days]', ylab='Survival Probability',
-     main='Baseline estimated survival probability')
+     col=cols[3], lwd=2, lty=1,
+     xlab='Time ', ylab='Survival Probability',
+     main='Baseline estimated survival probability wrt Age')
 #grid()
 ```
 
@@ -435,7 +443,7 @@ Plot the baseline survival function $S_0(t)$
 ```{r}
 plot(survfit(mod.cox, data=dataset), 
      col="darkorange2", lwd=2, lty=1,
-     xlab='Time [days]', ylab='Survival Probability',
+     xlab='Time ', ylab='Survival Probability',
      main='Baseline estimated survival probability')
 grid()
 ```
@@ -443,6 +451,14 @@ grid()
 mod.cox_age_sex <- coxph(Surv(time, status) ~ age + sex , data =  dataset)
 summary(mod.cox_age_sex)
 ```
+```{r}
+plot(survfit(mod.cox_age_sex, data=dataset), 
+     col=cols[3], lwd=2, lty=1,
+     xlab='Time ', ylab='Survival Probability',
+     main='Baseline estimated survival probability')
+grid()
+```
+
 ```{r}
 mod.cox_MMSE <- coxph(Surv(time, status) ~ MMSE , data =  dataset)
 summary(mod.cox_MMSE)
