@@ -29,7 +29,7 @@ library(aplpack)
 To visualize the outliers in this context we retort to a bagplot matrix:
 
 ```{r}
-bagplot_matrix <- aplpack::bagplot.pairs(dataset_longitudinal[,c(8,9,11,12,13,14,15)], main = 'Pairs of bagplots')  # bagplot dimension by dimension
+bagplot_matrix <- aplpack::bagplot.pairs(dataset_longitudinal[,c(8,9,11,13,14,15)], main = 'Pairs of bagplots')  # bagplot dimension by dimension
 ```
 
 Using this bagplot we want to try to understan which comparisons are reasonable to find outliers using the depth measures.
