@@ -252,6 +252,7 @@ plot(survfit(cox.age, data=dataset),
      xlab='Time ', ylab='Survival Probability',
      main='Baseline estimated survival probability')
 grid()
+abline(h=0.5, l='-')
 ```
 
 # age and sex
