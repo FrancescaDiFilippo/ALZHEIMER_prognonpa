@@ -40,6 +40,9 @@ library(ggplot2)
 library(knitr)
 library(broom)
 ```
+```{r}
+ind <- dataset[dataset$Group=='Converted'& dataset$Visit==1,]
+```
 
 PREPARAZIONE DEL DATASET
 
@@ -79,24 +82,13 @@ colnames(dataset) <- c( "Subject.ID",  "MRI.ID"   ,   "Group"   ,    "Visit"   ,
 
 
 ```{r}
-
-ggplot(data=dataset,aes(x=ID,y=time_y)) + 
+ind_ <- which(dataset$ID=='131')
+x11()
+ggplot(data=dataset[-146,],aes(x=ID,y=time_y)) + 
   geom_bar(stat='identity',width=0.2) +
   geom_point(aes(color=status_fact,shape=status_fact),size=6) +
   coord_flip()
 
-#without demented at first
-
-dataset_nodem <- rbind(nondementi_last[,-17],converted_first[,-17])
-
-dataset_nodem$time_y <- dataset_nodem$MR.Delay / 365
-dataset_nodem$status_fact <- factor(dataset_nodem$Group)
-
-
-ggplot(data=dataset_nodem,aes(x=ID,y=time_y)) + 
-  geom_bar(stat='identity',width=0.2) +
-  geom_point(aes(color=status_fact,shape=status_fact),size=6) +
-  coord_flip()
 
 ```
 
@@ -138,11 +130,6 @@ ggsurvplot(fit,
 ```
 
 
-The cumulative incidence, or cumulative failure probability (CFP), 
-(or comulative distribution function), shows
-the cumulative probabilities of experiencing the event of interest and
-it is computed as $$CFP(t) = P(T<t),$$ so it can be estimated as:
-$$1-S(t)$$
 
 ```{r}
 cumulative_incidence <- 1 - fit$surv
@@ -160,13 +147,8 @@ ggsurvplot(fit,
            title="Cumulative Incidence Curve for Alzheimer Survival")
 ```
 
-We may also want to plot the cumulative hazard; it is defined as
-$$H(t) = -log(S(t))$$ The cumulative hazard $H(t)$ can be interpreted as
-the cumulative force of mortality. In other words, it measures the total
-amount of risk that has been accumulated up to time $t$.
 
-The cumulative hazard is computed by the function `survfit()` using the
-Nelson-Aalen cumulative hazard rate estimator and it is given by:
+Nelson-Aalen cumulative hazard rate estimator 
 
 ```{r}
 H <- fit$cumhaz
@@ -194,6 +176,7 @@ $$S(t) \sim Sex $$
 dataset$sex <- 0
 dataset$sex[which(dataset$M.F=='F')] <-1
 fit.sex <- survfit(Surv(time, status) ~ sex, data=dataset)
+surv_median(fit.sex)
 ggsurvplot(fit.sex, conf.int = T,
            risk.table = TRUE, # Add risk table
            risk.table.col = "strata", # Change risk table color by groups
@@ -242,10 +225,11 @@ plotting a histogram showing the distribution of age.
 
 ```{r}
 attach(dataset)
-hist(dataset[sex=='0'& Group=='Converted',]$age, xlab='Age [years]', main='Histogram of age of Converted in Alzheimer Data', col="darkblue",bin=10)
-hist(dataset[sex=='1'& Group=='Converted',]$age, xlab='Age [years]', main='Histogram of age of Convertein Alzheimer Data', col="red",bin=10)
-hist(dataset$age, xlab='Age [years]', main='Histogram of age in Alzheimer Data')
+hist(dataset[sex=='0'& Group=='Converted',]$age, xlab='Age [years]', main='Histogram of age of Converted Male in Alzheimer Data', col="darkblue",bin=10)
+hist(dataset[sex=='1'& Group=='Converted',]$age, xlab='Age [years]', main='Histogram of age of Converted Female in Alzheimer Data', col="red")
+hist(dataset$age, xlab='Age [years]', main='Histogram of  age in Alzheimer Data')
 summary(dataset[sex=='1',]$age)
+hist(dataset[dataset$Group=='Converted',]$age, xlab='Age [years]', main='Histogram of age of Converted patient in Alzheimer Data', col=cols[2])
 ```
 
 
@@ -257,55 +241,18 @@ cox.age <- coxph(Surv(time_y, status) ~ age, data = dataset)
 cox.age
 ```
 
-As usual, the function `summary()` produces a more complete report:
-
 ```{r}
 summary(cox.age)
 ```
 ```{r}
+library(RColorBrewer)
+cols <- brewer.pal(3, "RdPu")
 plot(survfit(cox.age, data=dataset), 
-     col="darkorange2", lwd=2, lty=1,
-     xlab='Time [days]', ylab='Survival Probability',
+     col=cols[3], lwd=2, lty=1,
+     xlab='Time ', ylab='Survival Probability',
      main='Baseline estimated survival probability')
 grid()
 ```
-
-The Cox regression results can be interpreted as follows:
-
-1.  STATISTICAL SIGNIFICANCE The column marked "z" gives the Wald
-    statistic value. It corresponds to the ratio of each regression
-    coefficient to its standard error (z = coef/se(coef)). The wald
-    statistic evaluates whether the beta coefficient of a given variable
-    is statistically significantly different from 0. From the output
-    above, we can conclude that the variable age is statistically
-    significant at 2%.
-
-2.  THE REGRESSION COEFFICIENTS The second feature to note is the the
-    sign of the regression coefficients (coef). A positive sign means
-    that the hazard (risk of death) is higher, and thus the prognosis is
-    worse, for subjects with higher values of that variable. The beta
-    coefficient for age = -0.03777 indicates that younger patients have
-    more risk of alzheimer (lower survival rates) than elder ones.
-
-3.  HAZARD RATIO & CONFIDENCE INTERVAL The exponentiated coefficients
-    (exp(coef) = exp(0.0187) = 1.019), also known as hazard ratios, give
-    the effect size of covariates. For example, the increase of 1 unit
-    (1 year) in the age increase the hazard of 1.9%. The summary output
-    also gives upper and lower 95% confidence intervals for the hazard
-    ratio (exp(coef)), lower 95% bound = 1.001, upper 95% bound = 1.037.
-    Being younger is associated with good prognostic. Similarly, the
-    increase of 10 units (10 years) in the age increase the hazard of a
-    factor exp(0.0187\*10)=1.2056, or 20.5%.
-
-4.  GLOBAL STATISTICAL SIGNIFICANCE OF THE MODEL Finally, the output
-    gives p-values for three alternative tests for overall significance
-    of the model: the likelihood-ratio test, the Wald test, and the
-    score logrank statistic. These three methods are asymptotically
-    equivalent. For large enough N, they will give similar results. For
-    small N, they may differ somewhat. The Likelihood ratio test has
-    better behavior for small sample sizes, so it is generally
-    preferred.
-
 
 # age and sex
 
@@ -317,59 +264,16 @@ cox.age.sex
 summary(cox.age.sex)
 ```
 
-### Visualizing the estimated distribution of survival times
-
-
-Having fitted a Cox model to the data, it's possible to visualize the
-predicted survival proportion at any given point in time for a
-particular risk group. The function survfit() estimates the survival
-proportion, by default at the mean values of covariates.
-
-Plot the baseline survival function S_0(t)
 
 ```{r}
 cols=  brewer.pal(3, "RdPu")
-plot(survfit(cox.age, data=dataset), 
+library(RColorBrewer)
+plot(survfit(cox.age.sex, data=dataset), 
      col=cols[3], lwd=2, lty=1,
      xlab='Time ', ylab='Survival Probability',
-     main='Baseline estimated survival probability wrt Age')
-#grid()
-```
-
-We may wish to display how estimated survival depends upon the value of
-the covariates of interest. For istance, we want to assess the impact of
-the age on the estimated survival probability. In this case, we
-construct a new data frame with $M$ rows, one for each different value
-of age we are interested in (usually 2 or 3).
-
-Suppose we want to consider ages equal to 62, 73 and 80. We create the
-new data:
-
-```{r}
-age_df <- with(dataset,
-               data.frame(age = c(62,73,80) )
-)
-```
-
-This data frame is passed to survfit() via the newdata argument to
-estimate survival:
-
-```{r}
-fit.age <- survfit(cox.age, newdata = age_df)
-fit.age
-
-```
-
-```{r}
-plot(fit.age, conf.int=T,
-     col=c("dodgerblue2","navy","darkmagenta"), lwd=2, lty=1,
-     xlab='Time [days]', ylab='Survival Probability',
-     main='Adjusted Survival Probability Plot')
+     main='Baseline estimated survival probability wrt Age and Gender')
 grid()
-legend('topright', c("Age = 62", "Age = 73", "Age = 80"),
-       lty=c(1,1,1), lwd=c(2,2,2), col=c("dodgerblue2","navy","darkmagenta"))
 ```
- HIGHER THE AGE LOWER THE SURVIVAL PROB
 
 ## Multivariate Cox regression
 
@@ -393,38 +297,6 @@ mod.cox <- coxph(Surv(time, status) ~ age + sex + EDUC + MMSE, data =  dataset)
 summary(mod.cox)
 ```
 
-The p-values for all three overall tests (likelihood, Wald, and score)
-are extremely small, indicating that the model is significant. These
-tests evaluate the omnibus null hypothesis that all of the $\beta$s are
-0. In the above example, the test statistics are in close agreement, and
-the omnibus null hypothesis is soundly rejected.
-
-In the multivariate Cox analysis, the covariates sex and ph.karno are
-significant (p \< 0.05). However, the covariates age and wt.loss fail to
-be significant.
-
-The HR for sex is exp(coef) = exp(0.514) = 1.67 with 95% CI = [1.19;
-2.35]. The hazard ratios of covariates are interpretable as
-multiplicative effects on the hazard. For example, holding the other
-covariates constant, being a male increases the hazard by a factor of
-1.67, or 67%. We conclude that, being male is associated with bad
-prognostic.
-
-The HR for ph.karno is exp(coef) = exp(-0.013) = 0.987 with 95% CI =
-[0.975;0.999], indicating a strong relationship between the ph.karno
-value and decreased risk of death. Holding the other covariates
-constant, a higher value of ph.karno is associated with a better
-survival.
-
-The hazard ratio HR of age is exp(coef) = 1.01, with a 95% CI =
-[0.996;1.035]. Because the confidence interval for HR includes 1, these
-results indicate that age makes a smaller contribution to the difference
-in the HR after adjusting for the other covariates.
-
-Similarly, the hazard ratio HR of wt.loss is exp(coef) = 0.998, with a
-95% CI = [0.985;1.010]. Because the confidence interval for HR includes
-1, these results indicate that wt.loss makes a smaller contribution to
-the difference in the HR after adjusting for the other covariates.
 
 ### Visualizing Hazard ratios
 
@@ -463,11 +335,27 @@ grid()
 mod.cox_MMSE <- coxph(Surv(time, status) ~ MMSE , data =  dataset)
 summary(mod.cox_MMSE)
 ```
+```{r}
+plot(survfit(mod.cox_MMSE, data=dataset), 
+     col=cols[3], lwd=2, lty=1,
+     xlab='Time ', ylab='Survival Probability',
+     main='Baseline estimated survival probability')
+grid()
+```
 
 ```{r}
 mod.cox_ALL <- coxph(Surv(time, status) ~ age + sex + EDUC + MMSE+ SES + eTIV, data =  dataset)
 summary(mod.cox_ALL)
 ```
+
+```{r}
+plot(survfit(mod.cox_ALL, data=dataset), 
+     col=cols[3], lwd=2, lty=1,
+     xlab='Time ', ylab='Survival Probability',
+     main='Baseline estimated survival probability')
+grid()
+```
+
 alla fine il più significativo è sempre MMSE
 ### Cox Model Assumptions and Goodness of fit
 
@@ -710,3 +598,26 @@ Test for PH assumption
 test.ph.strata_ALL <- cox.zph(mod.cox.strata_ALL)
 test.ph.strata_ALL
 ```
+
+
+
+###PREDICTION
+
+
+```{r}
+attach(train)
+train$nWBV<- as.numeric(train$nWBV)
+fem_pt <- DepthProc::depthMedian(as.matrix(train[M.F=='F'&label=='Nondem',3:7]),list(method='Tukey'))
+unique(label)
+train$label <-  as.factor(train$label, levels=c('Nondem','Dem'))
+mod.cox_ALL <- coxph(Surv(time, status) ~ age + sex + EDUC + MMSE+ SES + eTIV, data =  dataset)
+summary(mod.cox_ALL)
+new_df <- with(dataset,
+               data.frame(age = c(50,65,80) )#consider ages equal to 50, 65 and 80
+)
+
+#estimate survival:
+fit.new <- survfit(cox, newdata = new_df)
+fit.new
+```
+
