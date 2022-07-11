@@ -23,9 +23,7 @@ head(na.omit(dataset_longitudinal[,c(8,9,11,13,14,15)]))
 ```{r}
 head(training)
 ```
-```{r}
-library(bruceR)
-```
+
 
 
 
@@ -53,8 +51,7 @@ med2=depthMedian(groups$'Nondem',depth_params = 'Mahalanobis')
 ```{r}
 med1
 med2
-med1.p
-med2.p
+
 ```
 
 
