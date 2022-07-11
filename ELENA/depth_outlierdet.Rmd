@@ -382,8 +382,8 @@ which(dataset_train$Age==outlying_obs2_train[,1] & dataset_train$nWBV==outlying_
 
 
 In the dataset 'train.csv':
--at line 175 there is a patient anomalous both for Age vs eTIV and Age vs nWBV;
--at line 145 there is a patient anomalous only for Age vs eTIV.
+-at line 175 there is a patient anomalous both for Age vs eTIV and Age vs nWBV: he is 33 y.o.
+-at line 145 there is a patient anomalous only for Age vs eTIV: he is 39 y.o.
 
 
 
