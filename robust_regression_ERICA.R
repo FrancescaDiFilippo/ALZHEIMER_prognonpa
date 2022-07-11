@@ -115,6 +115,13 @@ x11()
 plot.roc(data.roc = data.roc1, pred.prob = predizione1$predizione1)
 roc_auc_vec(truth = test$label, estimate = predizione1$predizione1, event_level = 'second') #non mi funziona il plot
 
+sensitivity=data.roc1$y.roc[575]
+sensitivity
+specificity=1-data.roc1$x.roc[575]
+specificity
+data.roc1$accuracy[575]
+data.roc1$precision[575]
+data.roc1$F1.score[575]
 
 Precision<-array(data=NA, dim= 15)
 Recall<- array(data=NA, dim=15)
@@ -277,8 +284,10 @@ roc_auc_vec(truth = test$label, estimate = predizione4$predizione4, event_level 
 data.roc.4$F1.score[312]
 data.roc.4$accuracy[312]
 data.roc.4$precision[312]
-
-
+sensitivity=data.roc.4$y.roc[312]
+specificity=1-data.roc.4$x.roc[312]
+sensitivity
+specificity
 spec4<-specificity.funct(predizione4,test)
 
 F1.score.pred4<-array(data=NA,dim=15)
@@ -848,6 +857,19 @@ summary(modello13)
 
 modello14<-glmrob(label ~ M + MMSE , data = train, family = binomial)
 summary(modello14)
+pred14 <- predict(modello14, newdata = test, type = 'response')
+pred14 <- as.data.frame(pred14)
+data.roc.14<- roc.curve(pred14, test)
+x11()
+plot.roc(data.roc = data.roc.14, pred.prob = pred14$pred14)
+roc_auc_vec(truth = test$label, estimate = pred14$pred14, event_level = 'second') 
+data.roc.14$F1.score[375]
+data.roc.14$accuracy[375]
+data.roc.14$precision[375]
+sensitivity=data.roc.14$y.roc[375]
+specificity=1-data.roc.14$x.roc[375]
+sensitivity
+specificity
 
 
 #modello super semplificato: predizione con solo MMSE
@@ -961,11 +983,18 @@ summary(model_red)
 pred.red <- predict(model_red, newdata = test, type = 'response')
 pred.red <- as.data.frame(pred.red)
 data.roc.red <- roc.curve(pred.red, test)
+x11()
+plot.roc(data.roc = data.roc.red, pred.prob = pred.red$pred.red)
+roc_auc_vec(truth = test$label, estimate = pred.red$pred, event_level = 'second') 
 
+data.roc.red$F1.score[426]
+data.roc.red$accuracy[426]
+data.roc.red$precision[426]
+sensitivity=data.roc.red$y.roc[426]
+specificity=1-data.roc.red$x.roc[426]
+sensitivity
+specificity
 
-data.roc.red$F1.score
-data.roc.red$accuracy
-data.roc.red$precision
 
 model_red2 <- glmrob(label ~ M + bs(Age) + bs(nWBV) + eTIV, data = train, family = binomial)
 summary(model_red2)# eTIV così aumenta significatività
@@ -975,7 +1004,7 @@ pred.red2 <- as.data.frame(pred.red2)
 data.roc.red <- roc.curve(pred.red2, test)
 x11()
 plot.roc(data.roc = data.roc.red, pred.prob = pred.red$pred.red)
-roc_auc_vec(truth = test$label, estimate = pred.red$pred, event_level = 'second') #non mi funziona il plot
+roc_auc_vec(truth = test$label, estimate = pred.red$pred, event_level = 'second')
 
 model_red3 <- glmrob(label ~ M + Age + bs(nWBV) + eTIV, data = train, family = binomial)
 summary(model_red3)# Age aumenta significatività e anche NWBV al terzo ordine
@@ -1012,10 +1041,19 @@ summary(model_red6)
 
 pred.red6 <- predict(model_red6, newdata = test, type = 'response')
 pred.red6 <- as.data.frame(pred.red6)
-data.roc.red <- roc.curve(pred.red6, test)
+data.roc.red6 <- roc.curve(pred.red6, test)
 x11()
-plot.roc(data.roc = data.roc.red, pred.prob = pred.red6$pred.red6)
-roc_auc_vec(truth = test$label, estimate = pred.red6$pred6, event_level = 'second') #non mi funziona il plot
+plot.roc(data.roc = data.roc.red6, pred.prob = pred.red6$pred.red6)
+roc_auc_vec(truth = test$label, estimate = pred.red6$pred6, event_level = 'second')
+
+
+data.roc.red6$F1.score[376]
+data.roc.red6$accuracy[376]
+data.roc.red6$precision[376]
+sensitivity=data.roc.red6$y.roc[376]
+specificity=1-data.roc.red6$x.roc[376]
+sensitivity
+specificity
 
 model_red7 <- glmrob(label ~ M +  nWBV , data = train, family = binomial)
 summary(model_red7) 
@@ -1030,6 +1068,10 @@ roc_auc_vec(truth = test$label, estimate = pred.red7$pred7, event_level = 'secon
 data.roc.red7$F1.score[325]
 data.roc.red7$accuracy[325]
 data.roc.red7$precision[325]
+sensitivity=data.roc.red7$y.roc[325]
+specificity=1-data.roc.red7$x.roc[325]
+sensitivity
+specificity
 
 model_red8 <- glmrob(label ~ nWBV , data = train, family = binomial)
 summary(model_red8) 
@@ -1045,5 +1087,9 @@ roc_auc_vec(truth = test$label, estimate = pred.red8$pred8, event_level = 'secon
 data.roc.red8$F1.score[376]
 data.roc.red8$accuracy[376]
 data.roc.red8$precision[376]
+sensitivity=data.roc.red8$y.roc[376]
+specificity=1-data.roc.red8$x.roc[376]
+sensitivity
+specificity
 
 
