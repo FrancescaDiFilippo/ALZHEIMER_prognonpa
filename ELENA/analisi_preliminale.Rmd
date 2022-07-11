@@ -99,6 +99,60 @@ pval
 
 
 
+permutation test to check the importance of our variable Age:
+
+
+```{r}
+age_dem <- training[which(training$label=='Dem'),3]
+age_nondem <- training[which(training$label=='Nondem'),3]
+
+# Parameters:
+n1 <- length(age_dem)
+n2 <- length(age_nondem)
+n <- n1 + n2
+
+set.seed(2022)
+
+# pooled sample:
+x_pooled <- c(age_dem,age_nondem)
+```
+
+
+```{r}
+# Test statistic: absolute difference between the two means
+T0 <- abs(mean(age_dem) - mean(age_nondem))
+
+# CMC simulation of permutational distribution under H0
+B <- 1000
+T_vec <- numeric(B)
+
+for(perm in 1:B){
+  # permutation:
+  permutation <- sample(1:n)
+  x_perm <- x_pooled[permutation]
+  x1_perm <- x_perm[1:n1]
+  x2_perm <- x_perm[(n1+1):n]
+  # test statistic:
+  T_vec[perm] <- abs(mean(x1_perm) - mean(x2_perm))
+}
+```
+
+
+
+```{r}
+plot(ecdf(T_vec),xlim=range(c(T_vec,T0)))
+abline(v=T0,col=3,lwd=2)
+```
+
+
+```{r}
+# p-value
+p_val <- sum(T_vec>=T0)/B
+p_val
+
+```
+
+null pvalue, significantly different
 
 
 
