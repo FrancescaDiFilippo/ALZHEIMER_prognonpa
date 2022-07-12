@@ -72,13 +72,6 @@ anova.gam(model_gam3, model_gam, test = 'Chisq')
 
 #il migliore sembra model_gam2
 
-#TOLGO VARIABILE MMSE
-model_red <- gam(label ~ M + s(Age, bs='cr') + s(nWBV,bs='cr') + s(eTIV, bs='cr'), data = train, select = TRUE, family = binomial)
-summary(model_red)
-1 - model_red$deviance/model_red$null.deviance
-
-anova.gam(model_gam2, model_red, test = 'Chisq')
-
 roc.curve <- function(predicted, test.set){
   p0 <- seq(0,1,by=0.001)
   spec <- NULL
@@ -133,7 +126,8 @@ pred <- as.data.frame(pred)
 #NB è PIù IMPORTANTE MASSIMIZZARE SENSITIVIT
 data.roc <- roc.curve(pred, test)
 x11()
-plot.roc(data.roc = data.roc, pred.prob = pred$pred)
+plot.roc(data.roc = data.roc, pred.prob = pred$pred) + geom_point(aes(x.roc[i1.opt],y.roc[i1.opt]), col = 'purple', cex = 3)
+
 roc_auc_vec(truth = test$label, estimate = pred$pred, event_level = 'second') #da aggiungere nel plot
 
 which(data.roc$y.roc>=0.75 & data.roc$x.roc<=0.4)
