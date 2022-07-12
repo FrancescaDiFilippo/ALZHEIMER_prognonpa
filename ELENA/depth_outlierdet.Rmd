@@ -1,10 +1,5 @@
 ---
 title: 'outlier detection'
-output:
-  html_document:
-    df_print: paged
-  pdf_document: default
-  html_notebook: default
 ---
 
 
@@ -34,7 +29,7 @@ library(aplpack)
 To visualize the outliers in this context we retort to a bagplot matrix:
 
 ```{r}
-bagplot_matrix <- aplpack::bagplot.pairs(dataset_longitudinal, main = 'Pairs of bagplots')  # bagplot dimension by dimension
+bagplot_matrix <- aplpack::bagplot.pairs(dataset_longitudinal[,c(8,9,11,13,14,15)], main = 'Pairs of bagplots')  # bagplot dimension by dimension
 ```
 
 Using this bagplot we want to try to understan which comparisons are reasonable to find outliers using the depth measures.
@@ -49,64 +44,6 @@ These phenomena are respectively denoted as **masking** and **swamping**, we wil
 
 
 
-```{r}
-# demented <- dataset_longitudinal[which(dataset_longitudinal$Group == 'Demented'),]
-# nondemented <- dataset_longitudinal[which(dataset_longitudinal$Group == 'Nondemented'),]
-# 
-# ddPlot(x = demented ,y=nondemented,depth_params = list(method='Tukey'))
-```
-
-```{r}
-depthContour(
-  data.frame(dataset_longitudinal$Age, dataset_longitudinal$MMSE),
-  depth_params = list(method = 'Tukey'),
-  points = TRUE,
-  colors = colorRampPalette(c('white', 'navy')),
-  levels = 10,
-  pdmedian = F,
-  graph_params = list(cex=.01, pch=1),
-  pmean = F
-)
-```
-
-```{r}
-depthContour(
-  data.frame(dataset_longitudinal$Age, dataset_longitudinal$MMSE),
-  depth_params = list(method = 'spatial'),
-  points = TRUE,
-  colors = colorRampPalette(c('white', 'navy')),
-  levels = 10,
-  pdmedian = F,
-  graph_params = list(cex=.01, pch=1),
-  pmean = F
-)
-```
-
-```{r}
-depthContour(
-  as.matrix(cbind(dataset_longitudinal$Age, dataset_longitudinal$MMSE)),
-  depth_params = list(method = 'LP'),
-  points = TRUE,
-  colors = colorRampPalette(c('white', 'navy')),
-  levels = 10,
-  pdmedian = F,
-  graph_params = list(cex=.01, pch=1),
-  pmean = F
-)
-```
-
-```{r}
-depthContour(
-  cbind(dataset_longitudinal$Age, dataset_longitudinal$MMSE),
-  depth_params = list(method = 'Mahalanobis'),
-  points = TRUE,
-  colors = colorRampPalette(c('white', 'navy')),
-  levels = 10,
-  pdmedian = F,
-  graph_params = list(cex=.01, pch=1),
-  pmean = F
-)
-```
 
 ```{r}
 depthContour(
@@ -123,7 +60,7 @@ depthContour(
 
 
 ```{r}
-bags1 <- bagplot(data.frame(dataset_longitudinal$Age, dataset_longitudinal$MMSE))
+bags1 <- bagplot(data.frame(dataset_longitudinal$Age, dataset_longitudinal$MMSE), xlab = "Age", ylab = "MMSE")
 
 ```
 ```{r}
@@ -135,18 +72,6 @@ which(dataset_longitudinal$Age==outlying_obs1[,1] & dataset_longitudinal$MMSE==o
 ```
 
 
-```{r}
-depthContour(
-  data.frame(dataset_longitudinal$EDUC, dataset_longitudinal$MMSE),
-  depth_params = list(method = 'Mahalanobis'),
-  points = TRUE,
-  colors = colorRampPalette(c('white', 'navy')),
-  levels = 10,
-  pdmedian = F,
-  graph_params = list(cex=.01, pch=1),
-  pmean = F
-)
-```
 
 
 
@@ -162,7 +87,7 @@ depthContour(
   pmean = F
 )
 
-bags2 <- bagplot(  data.frame(dataset_longitudinal$EDUC, dataset_longitudinal$MMSE))
+bags2 <- bagplot(  data.frame(dataset_longitudinal$EDUC, dataset_longitudinal$MMSE), xlab = "EDUC", ylab = "MMSE")
 ```
 
 ```{r}
@@ -186,7 +111,7 @@ depthContour(
   pmean = F
 )
 
-bags3 <- bagplot(data.frame(dataset_longitudinal$eTIV, dataset_longitudinal$MMSE))
+bags3 <- bagplot(data.frame(dataset_longitudinal$eTIV, dataset_longitudinal$MMSE), xlab = "eTIV", ylab = "MMSE")
 ```
 
 ```{r}
@@ -209,7 +134,7 @@ depthContour(
   pmean = F
 )
 
-bags4 <- bagplot(data.frame(dataset_longitudinal$nWBV, dataset_longitudinal$MMSE))
+bags4 <- bagplot(data.frame(dataset_longitudinal$nWBV, dataset_longitudinal$MMSE), xlab = "nWBV", ylab = "MMSE")
 ```
 
 ```{r}
@@ -233,7 +158,7 @@ depthContour(
   pmean = F
 )
 
-bags5 <- bagplot(data.frame(dataset_longitudinal$ASF, dataset_longitudinal$MMSE))
+bags5 <- bagplot(data.frame(dataset_longitudinal$ASF, dataset_longitudinal$MMSE), xlab = "ASF", ylab = "MMSE")
 ```
 
 ```{r}
@@ -258,7 +183,7 @@ depthContour(
   pmean = F
 )
 
-bags6 <- bagplot(data.frame(dataset_longitudinal$Age,dataset_longitudinal$EDUC ))
+bags6 <- bagplot(data.frame(dataset_longitudinal$Age,dataset_longitudinal$EDUC ), xlab = "Age", ylab = "EDUC")
 ```
 ```{r}
 outlying_obs6 <- bags6$pxy.outlier
@@ -286,7 +211,7 @@ depthContour(
   pmean = F
 )
 
-bags7 <- bagplot(data.frame(dataset_longitudinal$eTIV, dataset_longitudinal$EDUC))
+bags7 <- bagplot(data.frame(dataset_longitudinal$eTIV, dataset_longitudinal$EDUC), xlab = "eTIV", ylab = "EDUC")
 ```
 ```{r}
 outlying_obs7 <- bags7$pxy.outlier
@@ -309,7 +234,7 @@ depthContour(
   pmean = F
 )
 
-bags8 <- bagplot(data.frame(dataset_longitudinal$nWBV, dataset_longitudinal$EDUC))
+bags8 <- bagplot(data.frame(dataset_longitudinal$nWBV, dataset_longitudinal$EDUC), xlab = "nWBV", ylab = "EDUC")
 ```
 ```{r}
 outlying_obs8 <- bags8$pxy.outlier
@@ -332,7 +257,7 @@ depthContour(
   pmean = F
 )
 
-bags9 <- bagplot(data.frame(dataset_longitudinal$ASF, dataset_longitudinal$EDUC))
+bags9 <- bagplot(data.frame(dataset_longitudinal$ASF, dataset_longitudinal$EDUC), xlab = "ASF", ylab = "EDUC")
 ```
 
 
@@ -356,7 +281,7 @@ depthContour(
   pmean = F
 )
 
-bags10 <- bagplot(data.frame(dataset_longitudinal$Age, dataset_longitudinal$eTIV))
+bags10 <- bagplot(data.frame(dataset_longitudinal$Age, dataset_longitudinal$eTIV), xlab = "Age", ylab = "eTIV")
 ```
 
 
@@ -381,7 +306,7 @@ The patient OAS2_0066 at line 140 results as anomalous in the first visit only f
 
 
 
-Now we'll do the same with the complete dataset considering only the first visit:
+Now we'll do the same with the complete training dataset considering only the first visit:
 
 ```{r}
 dataset_train <- read.csv("train.csv", header = T)
@@ -397,7 +322,7 @@ head(dataset_train)
 To visualize the outliers in this context we retort to a bagplot matrix:
 
 ```{r}
-bagplot_matrix_train <- aplpack::bagplot.pairs(dataset_train)
+bagplot_matrix_train <- aplpack::bagplot.pairs(dataset_train[,c(-1,-7,-8, -9)])
 ```
 
 it seems to have problems only Age with eTIV and nWBV
@@ -417,7 +342,7 @@ depthContour(
   pmean = F
 )
 
-bags1_train <- bagplot(data.frame(dataset_train$Age, dataset_train$eTIV))
+bags1_train <- bagplot(data.frame(dataset_train$Age, dataset_train$eTIV), xlab = "Age", ylab = "eTIV")
 
 ```
 ```{r}
@@ -444,7 +369,7 @@ depthContour(
   pmean = F
 )
 
-bags2_train <- bagplot(data.frame(dataset_train$Age, dataset_train$nWBV))
+bags2_train <- bagplot(data.frame(dataset_train$Age, dataset_train$nWBV), xlab = "Age", ylab = "nWBV")
 
 ```
 ```{r}
@@ -457,8 +382,8 @@ which(dataset_train$Age==outlying_obs2_train[,1] & dataset_train$nWBV==outlying_
 
 
 In the dataset 'train.csv':
--at line 175 there is a patient anomalous both for Age vs eTIV and Age vs nWBV;
--at line 145 there is a patient anomalous only for Age vs eTIV.
+-at line 175 there is a patient anomalous both for Age vs eTIV and Age vs nWBV: he is 33 y.o.
+-at line 145 there is a patient anomalous only for Age vs eTIV: he is 39 y.o.
 
 
 

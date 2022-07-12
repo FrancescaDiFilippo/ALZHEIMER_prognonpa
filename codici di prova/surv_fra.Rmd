@@ -17,6 +17,7 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
+options(rgl.debug= T)
 library(rgl)
 knitr::opts_chunk$set(echo = TRUE)
 knitr::knit_hooks$set(webgl = hook_webgl)
@@ -46,20 +47,20 @@ colnames(dataset_old)
 ## DEMENTI  
 dataset_old$ID = str_sub(dataset_old$Subject.ID,-3) 
 dementi_prima <- dataset_old[dataset_old$Group=='Demented'& dataset_old$Visit==1,]
-dementi_prima$status <- 1
+dementi_prima$status <- 2
 dementi_prima$group_new <- 'Demented'
 ##NON DEMENTI
 nondementi_last <- dataset_old[dataset_old$Group=='Nondemented',]
 nondementi_last <-nondementi_last%>%group_by(ID)%>% mutate(max_visit=max(Visit))%>%ungroup()%>% filter(Visit==max_visit)
 length(unique(nondementi_last$ID))
-nondementi_last$status<-0
+nondementi_last$status<-1
 nondementi_last$group_new <- 'Nondemented'
 ## CONVERTED
 
 converted_first <- dataset_old[dataset_old$Group=='Converted'&dataset_old$CDR >0,]
 converted_first <-converted_first%>%group_by(ID)%>% mutate(min_visit=min(Visit))%>%ungroup()%>% filter(Visit==min_visit)
 converted_first$group_new <- 'Demented'
-converted_first$status <- 1
+converted_first$status <- 2
 #ALL TOGETHER 
 dataset <- rbind(nondementi_last[,-17],dementi_prima,converted_first[,-17])
 
@@ -117,7 +118,7 @@ The Kaplan-Meier estimator of a survival curve can be computed using the
 `survfit` function:
 
 ```{r}
-fit <- survfit(Surv(dataset$time, status==1) ~ 1, data = dataset)
+fit <- survfit(Surv(dataset$time, status==2) ~ 1, data = dataset)
 # status==1 -> when the event occurred
 ```
 
@@ -266,8 +267,22 @@ min(nondementi_last$Age) #62
 max(nondementi_last$Age) #97
 min(dataset$age) #61
 max(dataset$age) #97
-fit.age <- survfit(Surv(time, status) ~ age, data=dataset)
-#ggsurvplot(fit.age, conf.int = F, risk.table.col = "strata", legend='none')
+```
+
+
+```{r}
+dataset$sex <- 0
+dataset$sex[which(dataset$M.F=='F')] <-1
+fit.sex <- survfit(Surv(time, status) ~ sex, data=dataset)
+ggsurvplot(fit.sex, conf.int = T,
+           risk.table = TRUE, # Add risk table
+           risk.table.col = "strata", # Change risk table color by groups
+           surv.median.line = "hv", # Specify median survival
+           ggtheme = theme_bw(), # Change ggplot2 theme
+           break.time.by=90,
+           legend.labs=c('M','F'), legend.title="SEX",  
+           palette=c("darkblue","red"), 
+           title="Kaplan-Meier Curves by age class for Alzheimer Survival")
 ```
 
 
@@ -295,14 +310,14 @@ What happens when we make a KM plot with this new categorization?
 ```{r}
 
 fit.age <- survfit(Surv(time, status) ~ cutpoint, data=dataset)
-ggsurvplot(fit.age, conf.int = T,
+ggsurvplot(fit.sex, conf.int = T,
            risk.table = TRUE, # Add risk table
            risk.table.col = "strata", # Change risk table color by groups
            surv.median.line = "hv", # Specify median survival
            ggtheme = theme_bw(), # Change ggplot2 theme
            break.time.by=90,
-           legend.labs=c("60", "70","80","90"), legend.title="Age class",  
-           palette=c("darkblue","cyan3","red","green"), 
+           legend.labs=c('M','F'), legend.title="SEX",  
+           palette=c("darkblue","red"), 
            title="Kaplan-Meier Curves by age class for Alzheimer Survival")
 ```
 
@@ -310,7 +325,7 @@ It looks like there's some differences in the curves between age class patients,
 
 ```{r}
 
-log_rank_test <- survdiff(Surv(time, status) ~ cutpoint, data=dataset)
+log_rank_test <- survdiff(Surv(time, status) ~ sex, data=dataset)
 log_rank_test  #0.09
 #similar to the analysis of variance
 
