@@ -142,6 +142,11 @@ sum(T_MF >= T0_MF)/B
 
 so sex is signficant (we reject H0)
 
+```{r}
+plot(ecdf(T_MF))
+abline(v=T0_MF,col=3,lwd=2)
+```
+
 
 
 
@@ -189,6 +194,8 @@ for(perm in 1:B){
 sum(T_MF >= T0_MF)/B
 
 ```
+
+
 
 So in this case sex is not significant at 5%.
 
